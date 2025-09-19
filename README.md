@@ -1,12 +1,33 @@
-# React + Vite
+# Amrinder Singh - Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A clean and modern personal portfolio website built with React, Vite, and Tailwind CSS. This portfolio showcases my background as a Computer Science student at the University of Houston with experience in iOS, Android, and Web Development.
 
-Currently, two official plugins are available:
+## 🚀 Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Visit the live portfolio: [https://Amuo007.github.io/portfolio](https://Amuo007.github.io/portfolio)
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Frontend:** React 19.1.1
+- **Build Tool:** Vite 7.1.6
+- **Styling:** Tailwind CSS 4.1.13
+- **Linting:** ESLint with React hooks and refresh plugins
+- **Deployment:** GitHub Pages
+- **CI/CD:** GitHub Actions
+
+## 📋 Features
+
+- Clean and responsive design
+- Professional profile section
+- About me section highlighting skills and experience
+- Social media links (GitHub, LinkedIn)
+- Optimized for mobile and desktop viewing
+- Fast loading with Vite's optimized build process
+
+## 🏃‍♂️ Getting Started
+
+### Prerequisites
+
+- Node.js (version 22 or higher)
+- npm or yarn package manager
+
