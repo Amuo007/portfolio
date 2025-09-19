@@ -33,7 +33,7 @@ export default function App() {
               GitHub
             </a>
             <a
-              href="https://www.linkedin.com/in/amrinder-singh"
+              href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
               target="_blank"
               rel="noreferrer"
               className="text-blue-600 hover:underline"
