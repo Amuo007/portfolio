@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main  # 👈 deploy whenever you push to main
+permissions:
+  contents: write 
 
 jobs:
   build:
