@@ -241,7 +241,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
             <img
-              src="https://media.licdn.com/dms/image/v2/D5603AQGZQQawJzY-jg/profile-displayphoto-shrink_400_400/B56ZUAo3ERHoAs-/0/1739472466551?e=1763596800&v=beta&t=My4GGKo_pk6454BwGXtsfZTrOZCGKjvJwI9ZkVtE50M"
+              src="https://media.licdn.com/dms/image/v2/D5603AQGZQQawJzY-jg/profile-displayphoto-shrink_400_400/B56ZUAo3ERHoAs-/0/1739472466551?e=1774483200&v=beta&t=iXV43y4lRs27DmqvdBw1GzFgZEleC1BsTAPF5c7qCcQ"
               alt="Amrinder Singh"
               className="w-32 h-32 rounded-full border-4 border-blue-500 object-cover shadow-lg"
             />
