@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 
 const GITHUB_USERNAME = "Amuo007";
-
-// Repos to exclude (optional - add repo names you don't want shown)
 const EXCLUDED_REPOS = [];
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('about');
   const [repos, setRepos] = useState([]);
-  const [repoReadmes, setRepoReadmes] = useState({});
+  const [repoDetails, setRepoDetails] = useState({});
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [expandedRepo, setExpandedRepo] = useState(null);
   const [loadingReadme, setLoadingReadme] = useState(null);
 
-  // Fetch all public repos
   useEffect(() => {
     if (activeSection === 'projects') {
       fetchRepos();
@@ -31,15 +28,82 @@ export default function App() {
         .filter(repo => !repo.fork && !EXCLUDED_REPOS.includes(repo.name))
         .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
       setRepos(filtered);
+
+      // For repos with no GitHub description, auto-fetch README summary in background
+      filtered.forEach(repo => {
+        if (!repo.description) {
+          fetchReadmeSummary(repo.name);
+        }
+      });
     } catch (err) {
       console.error("Failed to fetch repos:", err);
     }
     setLoadingRepos(false);
   };
 
-  const fetchReadme = async (repoName) => {
-    if (repoReadmes[repoName] !== undefined) {
-      // Already fetched
+  // Extract first meaningful plain-text sentence from README
+  const extractSummary = (md) => {
+    if (!md) return null;
+    const lines = md.split('\n');
+    for (let line of lines) {
+      const trimmed = line.trim();
+      if (
+        !trimmed ||
+        trimmed.startsWith('#') ||
+        trimmed.startsWith('!') ||
+        trimmed.startsWith('<') ||
+        trimmed.startsWith('```') ||
+        trimmed.startsWith('|') ||
+        trimmed.startsWith('---') ||
+        trimmed.startsWith('===') ||
+        trimmed.startsWith('*') ||
+        trimmed.startsWith('-')
+      ) continue;
+
+      const clean = trimmed
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/~~(.+?)~~/g, '$1')
+        .trim();
+
+      if (clean.length > 20) {
+        return clean.length > 200 ? clean.slice(0, 200) + '…' : clean;
+      }
+    }
+    return null;
+  };
+
+  const fetchReadmeSummary = async (repoName) => {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_USERNAME}/${repoName}/readme`,
+        { headers: { Accept: "application/vnd.github.raw" } }
+      );
+      if (res.ok) {
+        const text = await res.text();
+        const summary = extractSummary(text);
+        setRepoDetails(prev => ({
+          ...prev,
+          [repoName]: { ...prev[repoName], readme: text, summary }
+        }));
+      } else {
+        setRepoDetails(prev => ({
+          ...prev,
+          [repoName]: { ...prev[repoName], readme: null, summary: null }
+        }));
+      }
+    } catch {
+      setRepoDetails(prev => ({
+        ...prev,
+        [repoName]: { ...prev[repoName], readme: null, summary: null }
+      }));
+    }
+  };
+
+  const fetchFullReadme = async (repoName) => {
+    if (repoDetails[repoName]?.readme !== undefined) {
       setExpandedRepo(expandedRepo === repoName ? null : repoName);
       return;
     }
@@ -51,57 +115,54 @@ export default function App() {
       );
       if (res.ok) {
         const text = await res.text();
-        setRepoReadmes(prev => ({ ...prev, [repoName]: text }));
+        const summary = extractSummary(text);
+        setRepoDetails(prev => ({
+          ...prev,
+          [repoName]: { ...prev[repoName], readme: text, summary }
+        }));
       } else {
-        setRepoReadmes(prev => ({ ...prev, [repoName]: null }));
+        setRepoDetails(prev => ({
+          ...prev,
+          [repoName]: { ...prev[repoName], readme: null, summary: null }
+        }));
       }
     } catch {
-      setRepoReadmes(prev => ({ ...prev, [repoName]: null }));
+      setRepoDetails(prev => ({
+        ...prev,
+        [repoName]: { ...prev[repoName], readme: null, summary: null }
+      }));
     }
     setLoadingReadme(null);
     setExpandedRepo(repoName);
   };
 
-  const toggleRepo = (repoName) => {
+  const toggleReadme = (repoName) => {
     if (expandedRepo === repoName) {
       setExpandedRepo(null);
     } else {
-      fetchReadme(repoName);
+      fetchFullReadme(repoName);
     }
   };
 
-  // Simple markdown-to-HTML for README display (handles headers, bold, code, links, lists)
   const renderMarkdown = (md) => {
     if (!md) return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
-
     let html = md
-      // Escape HTML
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      // Headers
       .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>')
       .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-gray-900 mt-5 mb-2">$1</h2>')
       .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold text-gray-900 mt-5 mb-2">$1</h1>')
-      // Bold
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Inline code
       .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>')
-      // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>')
-      // Bullet lists
       .replace(/^\s*[-*] (.+)$/gm, '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>')
-      // Numbered lists
       .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-gray-700 text-sm">$1</li>')
-      // Line breaks for double newlines
       .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
-      // Single newlines
       .replace(/\n/g, '<br/>');
-
     return `<p class="text-gray-700 text-sm mb-2">${html}</p>`;
   };
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-  };
+  const formatDate = (dateStr) =>
+    new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 
   const getLanguageColor = (lang) => {
     const colors = {
@@ -149,66 +210,67 @@ export default function App() {
   const RepoCard = ({ repo }) => {
     const isExpanded = expandedRepo === repo.name;
     const isLoading = loadingReadme === repo.name;
-    const readme = repoReadmes[repo.name];
+    const details = repoDetails[repo.name];
+    const readme = details?.readme;
+
+    // Use GitHub description if set, otherwise fall back to README summary
+    const description = repo.description || details?.summary;
+    const summaryLoading = !repo.description && details === undefined;
 
     return (
       <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
         <div className="p-6">
-          {/* Top Row */}
+          {/* Repo name + meta */}
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
               </svg>
-              <a
-                href={repo.html_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-lg font-bold text-blue-700 hover:underline"
-              >
+              <a href={repo.html_url} target="_blank" rel="noreferrer" className="text-lg font-bold text-blue-700 hover:underline">
                 {repo.name}
               </a>
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-500">
               {repo.stargazers_count > 0 && (
                 <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   {repo.stargazers_count}
                 </span>
               )}
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                Updated {formatDate(repo.updated_at)}
-              </span>
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">{formatDate(repo.updated_at)}</span>
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-gray-600 text-sm mb-4 min-h-[2rem]">
-            {repo.description || <span className="italic text-gray-400">No description provided</span>}
-          </p>
+          {/* Description: GitHub desc or README summary */}
+          <div className="mb-4 min-h-[1.5rem]">
+            {summaryLoading ? (
+              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+            ) : description ? (
+              <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
+            ) : (
+              <p className="text-gray-400 text-sm italic">No description available</p>
+            )}
+          </div>
 
           {/* Topics */}
           {repo.topics && repo.topics.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {repo.topics.map(topic => (
-                <span key={topic} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full border border-blue-200">
+                <span key={topic} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full border border-blue-100">
                   {topic}
                 </span>
               ))}
             </div>
           )}
 
-          {/* Footer row */}
-          <div className="flex items-center justify-between mt-2">
+          {/* Footer */}
+          <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-4">
               {repo.language && (
-                <span className="flex items-center gap-1 text-sm text-gray-600">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: getLanguageColor(repo.language) }}
-                  />
+                <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: getLanguageColor(repo.language) }} />
                   {repo.language}
                 </span>
               )}
@@ -221,35 +283,34 @@ export default function App() {
                 </span>
               )}
             </div>
+
             <button
-              onClick={() => toggleRepo(repo.name)}
-              className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 ${
-                isExpanded
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              onClick={() => toggleReadme(repo.name)}
+              className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                isExpanded ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {isLoading ? (
-                <span className="flex items-center gap-1">
+                <>
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  Loading...
-                </span>
+                  Loading…
+                </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {isExpanded ? 'Hide README' : 'View README'}
+                  {isExpanded ? 'Hide README' : 'Full README'}
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* README Drawer */}
+        {/* Full README drawer */}
         {isExpanded && (
           <div className="border-t border-gray-200 bg-gray-50 px-6 py-5">
             <div className="flex items-center gap-2 mb-3">
@@ -288,7 +349,6 @@ export default function App() {
                 </p>
               </div>
             </div>
-
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h3 className="text-xl font-bold mb-4 text-gray-900">Education</h3>
               <div className="border-l-4 border-blue-500 pl-6">
@@ -301,24 +361,15 @@ export default function App() {
                 </p>
               </div>
             </div>
-
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h3 className="text-xl font-bold mb-4 text-gray-900">Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <span className="text-blue-600 mr-3">📍</span>
-                  <span>Houston, TX 77084</span>
-                </div>
+                <div className="flex items-center"><span className="text-blue-600 mr-3">📍</span><span>Houston, TX 77084</span></div>
                 <div className="flex items-center">
                   <span className="text-blue-600 mr-3">📧</span>
-                  <a href="mailto:Amrinderbalharjob@gmail.com" className="text-blue-600 hover:underline">
-                    Amrinderbalharjob@gmail.com
-                  </a>
+                  <a href="mailto:Amrinderbalharjob@gmail.com" className="text-blue-600 hover:underline">Amrinderbalharjob@gmail.com</a>
                 </div>
-                <div className="flex items-center">
-                  <span className="text-blue-600 mr-3">📱</span>
-                  <span>(832) 263-4489</span>
-                </div>
+                <div className="flex items-center"><span className="text-blue-600 mr-3">📱</span><span>(832) 263-4489</span></div>
               </div>
             </div>
           </div>
@@ -332,21 +383,13 @@ export default function App() {
                 <h2 className="text-2xl font-bold text-gray-900">GitHub Projects</h2>
                 <p className="text-gray-500 text-sm mt-1">
                   Live from{" "}
-                  <a
-                    href={`https://github.com/${GITHUB_USERNAME}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:underline font-medium"
-                  >
+                  <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
                     @{GITHUB_USERNAME}
                   </a>
-                  {" "}· Updates automatically when you push new repos
+                  {" "}· New repos appear automatically
                 </p>
               </div>
-              <button
-                onClick={fetchRepos}
-                className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-all"
-              >
+              <button onClick={fetchRepos} className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-all">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -355,31 +398,21 @@ export default function App() {
             </div>
 
             {loadingRepos ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-4">
                 {[1, 2, 3].map(i => (
                   <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
                     <div className="h-5 bg-gray-200 rounded w-1/3 mb-3" />
-                    <div className="h-4 bg-gray-100 rounded w-2/3 mb-4" />
-                    <div className="flex gap-2">
-                      <div className="h-6 bg-gray-100 rounded-full w-16" />
-                      <div className="h-6 bg-gray-100 rounded-full w-20" />
-                    </div>
+                    <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
+                    <div className="h-4 bg-gray-100 rounded w-1/2" />
                   </div>
                 ))}
               </div>
             ) : repos.length === 0 ? (
-              <div className="text-center py-16 text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-                <p>No repositories found</p>
-              </div>
+              <div className="text-center py-16 text-gray-500"><p>No repositories found.</p></div>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-gray-400">{repos.length} public repositories</p>
-                {repos.map(repo => (
-                  <RepoCard key={repo.id} repo={repo} />
-                ))}
+                {repos.map(repo => <RepoCard key={repo.id} repo={repo} />)}
               </div>
             )}
           </div>
@@ -394,9 +427,7 @@ export default function App() {
                 <div key={category}>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">{category}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {skillList.map((skill, idx) => (
-                      <SkillTag key={idx} skill={skill} />
-                    ))}
+                    {skillList.map((skill, idx) => <SkillTag key={idx} skill={skill} />)}
                   </div>
                 </div>
               ))}
@@ -421,14 +452,12 @@ export default function App() {
           </div>
         );
 
-      default:
-        return null;
+      default: return null;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
       <header className="bg-white shadow-lg">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
@@ -441,35 +470,15 @@ export default function App() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">Amrinder Singh</h1>
               <p className="text-xl text-gray-600 mb-4">Computer Science Student | Full-Stack Developer</p>
               <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                <a
-                  href="https://github.com/Amuo007"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300 transform hover:scale-105"
-                >
-                  GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
-                >
-                  LinkedIn
-                </a>
-                <a
-                  href="mailto:Amrinderbalharjob@gmail.com"
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105"
-                >
-                  Email Me
-                </a>
+                <a href="https://github.com/Amuo007" target="_blank" rel="noreferrer" className="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300 transform hover:scale-105">GitHub</a>
+                <a href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/" target="_blank" rel="noreferrer" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">LinkedIn</a>
+                <a href="mailto:Amrinderbalharjob@gmail.com" className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105">Email Me</a>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation */}
       <nav className="bg-white border-t border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex flex-wrap justify-center gap-4">
@@ -481,12 +490,8 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        {renderContent()}
-      </main>
+      <main className="max-w-6xl mx-auto px-6 py-8">{renderContent()}</main>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-12">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-gray-300">© 2025 Amrinder Singh. Built with React and Tailwind CSS.</p>
