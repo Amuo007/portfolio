@@ -1,70 +1,117 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const GITHUB_USERNAME = "Amuo007";
+
+// Repos to exclude (optional - add repo names you don't want shown)
+const EXCLUDED_REPOS = [];
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('about');
+  const [repos, setRepos] = useState([]);
+  const [repoReadmes, setRepoReadmes] = useState({});
+  const [loadingRepos, setLoadingRepos] = useState(false);
+  const [expandedRepo, setExpandedRepo] = useState(null);
+  const [loadingReadme, setLoadingReadme] = useState(null);
 
-  const projects = [
-    {
-      title: "SiriMind iOS App",
-      period: "May 2024 - August 2024",
-      type: "Independent Project",
-      description: "Voice-enabled iOS application integrating OpenAI GPT API for intelligent conversational interface",
-      highlights: [
-        "Implemented Firebase authentication supporting 100+ test users",
-        "Designed responsive UI using UIKit with speech-to-text functionality",
-        "Integrated secure data management system"
-      ],
-      tech: ["Swift", "UIKit", "OpenAI API", "Firebase", "iOS"]
-    },
-    {
-      title: "SpringAI Web Tour Builder",
-      period: "January 2024 - May 2024", 
-      type: "Independent Project",
-      description: "Full-stack web platform auto-generating interactive onboarding tours using Anthropic Claude API",
-      highlights: [
-        "Integrated Microsoft OAuth authentication",
-        "Managed deployment for 50+ demonstration projects",
-        "Created dynamic tour generation with analytics dashboard"
-      ],
-      tech: ["React", "Node.js", "Anthropic Claude API", "OAuth", "Web Development"]
-    },
-    {
-      title: "User Management System",
-      period: "August 2023 - December 2023",
-      type: "Software Engineering Course",
-      description: "Enterprise-level user management system with role-based access control",
-      highlights: [
-        "Collaborated with 4-member team using Agile methodology",
-        "Designed RESTful API endpoints with secure authentication",
-        "Built responsive dashboards with real-time data synchronization"
-      ],
-      tech: ["JavaScript", "REST API", "Team Collaboration", "Full-Stack"]
-    },
-    {
-      title: "Task Manager iOS App",
-      period: "August 2024 - December 2024",
-      type: "Mobile Application Development Course", 
-      description: "Native iOS task management application with Core Data persistence",
-      highlights: [
-        "Achieved 20% performance improvement in loading times",
-        "Implemented CRUD operations with local notifications",
-        "Built clean architecture with data export functionality"
-      ],
-      tech: ["Swift", "Core Data", "iOS", "UIKit", "Performance Optimization"]
-    },
-    {
-      title: "Weather Forecast App",
-      period: "January 2024 - May 2024",
-      type: "Independent Project",
-      description: "iOS weather application with real-time API integration and location services",
-      highlights: [
-        "Integrated MapKit achieving 95% uptime with GPS tracking",
-        "Designed intuitive UI with weather visualizations",
-        "Implemented 7-day forecast capabilities"
-      ],
-      tech: ["Swift", "MapKit", "Weather API", "Location Services", "iOS"]
+  // Fetch all public repos
+  useEffect(() => {
+    if (activeSection === 'projects') {
+      fetchRepos();
     }
-  ];
+  }, [activeSection]);
+
+  const fetchRepos = async () => {
+    setLoadingRepos(true);
+    try {
+      const res = await fetch(
+        `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=100`
+      );
+      const data = await res.json();
+      const filtered = data
+        .filter(repo => !repo.fork && !EXCLUDED_REPOS.includes(repo.name))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      setRepos(filtered);
+    } catch (err) {
+      console.error("Failed to fetch repos:", err);
+    }
+    setLoadingRepos(false);
+  };
+
+  const fetchReadme = async (repoName) => {
+    if (repoReadmes[repoName] !== undefined) {
+      // Already fetched
+      setExpandedRepo(expandedRepo === repoName ? null : repoName);
+      return;
+    }
+    setLoadingReadme(repoName);
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_USERNAME}/${repoName}/readme`,
+        { headers: { Accept: "application/vnd.github.raw" } }
+      );
+      if (res.ok) {
+        const text = await res.text();
+        setRepoReadmes(prev => ({ ...prev, [repoName]: text }));
+      } else {
+        setRepoReadmes(prev => ({ ...prev, [repoName]: null }));
+      }
+    } catch {
+      setRepoReadmes(prev => ({ ...prev, [repoName]: null }));
+    }
+    setLoadingReadme(null);
+    setExpandedRepo(repoName);
+  };
+
+  const toggleRepo = (repoName) => {
+    if (expandedRepo === repoName) {
+      setExpandedRepo(null);
+    } else {
+      fetchReadme(repoName);
+    }
+  };
+
+  // Simple markdown-to-HTML for README display (handles headers, bold, code, links, lists)
+  const renderMarkdown = (md) => {
+    if (!md) return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
+
+    let html = md
+      // Escape HTML
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      // Headers
+      .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-gray-900 mt-5 mb-2">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold text-gray-900 mt-5 mb-2">$1</h1>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>')
+      // Bullet lists
+      .replace(/^\s*[-*] (.+)$/gm, '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>')
+      // Numbered lists
+      .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-gray-700 text-sm">$1</li>')
+      // Line breaks for double newlines
+      .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
+      // Single newlines
+      .replace(/\n/g, '<br/>');
+
+    return `<p class="text-gray-700 text-sm mb-2">${html}</p>`;
+  };
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  };
+
+  const getLanguageColor = (lang) => {
+    const colors = {
+      JavaScript: '#f7df1e', TypeScript: '#3178c6', Python: '#3572A5',
+      Swift: '#F05138', Java: '#b07219', 'C++': '#f34b7d',
+      HTML: '#e34c26', CSS: '#563d7c', Go: '#00ADD8', Rust: '#dea584',
+      Ruby: '#701516', Kotlin: '#A97BFF', Dart: '#00B4AB',
+    };
+    return colors[lang] || '#8b949e';
+  };
 
   const skills = {
     "Programming Languages": ["Swift", "Java", "JavaScript", "Python", "C++"],
@@ -76,7 +123,7 @@ export default function App() {
 
   const certifications = [
     "The Complete Full-Stack Web Development Bootcamp (Dr. Angela Yu) - 100% Complete",
-    "iOS & Swift - The Complete iOS App Development Bootcamp (Dr. Angela Yu) - 100% Complete", 
+    "iOS & Swift - The Complete iOS App Development Bootcamp (Dr. Angela Yu) - 100% Complete",
     "Tensorflow 2: Deep Learning & Artificial Intelligence (Lazy Programmer Inc.) - 99% Complete"
   ];
 
@@ -84,8 +131,8 @@ export default function App() {
     <button
       onClick={() => onClick(section)}
       className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-        isActive 
-          ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
+        isActive
+          ? 'bg-blue-600 text-white shadow-lg transform scale-105'
           : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105'
       }`}
     >
@@ -99,36 +146,130 @@ export default function App() {
     </span>
   );
 
-  const ProjectCard = ({ project }) => (
-    <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
-        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-          {project.type}
-        </span>
-      </div>
-      <p className="text-gray-600 text-sm mb-3">{project.period}</p>
-      <p className="text-gray-700 mb-4">{project.description}</p>
-      
-      <div className="space-y-2 mb-4">
-        {project.highlights.map((highlight, idx) => (
-          <div key={idx} className="flex items-start">
-            <span className="text-blue-500 mr-2 mt-1">•</span>
-            <span className="text-gray-700 text-sm">{highlight}</span>
+  const RepoCard = ({ repo }) => {
+    const isExpanded = expandedRepo === repo.name;
+    const isLoading = loadingReadme === repo.name;
+    const readme = repoReadmes[repo.name];
+
+    return (
+      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+        <div className="p-6">
+          {/* Top Row */}
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              <a
+                href={repo.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-lg font-bold text-blue-700 hover:underline"
+              >
+                {repo.name}
+              </a>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-gray-500">
+              {repo.stargazers_count > 0 && (
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  {repo.stargazers_count}
+                </span>
+              )}
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                Updated {formatDate(repo.updated_at)}
+              </span>
+            </div>
           </div>
-        ))}
+
+          {/* Description */}
+          <p className="text-gray-600 text-sm mb-4 min-h-[2rem]">
+            {repo.description || <span className="italic text-gray-400">No description provided</span>}
+          </p>
+
+          {/* Topics */}
+          {repo.topics && repo.topics.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {repo.topics.map(topic => (
+                <span key={topic} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full border border-blue-200">
+                  {topic}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Footer row */}
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center gap-4">
+              {repo.language && (
+                <span className="flex items-center gap-1 text-sm text-gray-600">
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: getLanguageColor(repo.language) }}
+                  />
+                  {repo.language}
+                </span>
+              )}
+              {repo.forks_count > 0 && (
+                <span className="flex items-center gap-1 text-sm text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                  </svg>
+                  {repo.forks_count}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => toggleRepo(repo.name)}
+              className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                isExpanded
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-1">
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {isExpanded ? 'Hide README' : 'View README'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* README Drawer */}
+        {isExpanded && (
+          <div className="border-t border-gray-200 bg-gray-50 px-6 py-5">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-sm font-semibold text-gray-700">README.md</span>
+            </div>
+            <div
+              className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(readme) }}
+            />
+          </div>
+        )}
       </div>
-      
-      <div className="flex flex-wrap gap-2">
-        {project.tech.map((tech, idx) => (
-          <SkillTag key={idx} skill={tech} />
-        ))}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderContent = () => {
-    switch(activeSection) {
+    switch (activeSection) {
       case 'about':
         return (
           <div className="space-y-6">
@@ -136,18 +277,18 @@ export default function App() {
               <h2 className="text-2xl font-bold mb-6 text-gray-900">About Me</h2>
               <div className="space-y-4 text-gray-700">
                 <p className="leading-relaxed">
-                  I'm a dedicated Computer Science student at the University of Houston, expected to graduate in May 2026. 
-                  With a passion for creating innovative solutions, I specialize in iOS and Android mobile development, 
+                  I'm a dedicated Computer Science student at the University of Houston, expected to graduate in May 2026.
+                  With a passion for creating innovative solutions, I specialize in iOS and Android mobile development,
                   full-stack web development, and AI integration.
                 </p>
                 <p className="leading-relaxed">
-                  My experience spans across multiple domains including voice-enabled applications, enterprise-level 
-                  systems, and intelligent web platforms. I love tackling complex problems and turning ideas into 
+                  My experience spans across multiple domains including voice-enabled applications, enterprise-level
+                  systems, and intelligent web platforms. I love tackling complex problems and turning ideas into
                   functional, user-friendly applications.
                 </p>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h3 className="text-xl font-bold mb-4 text-gray-900">Education</h3>
               <div className="border-l-4 border-blue-500 pl-6">
@@ -155,7 +296,7 @@ export default function App() {
                 <p className="text-gray-700">Bachelor of Science, Computer Science</p>
                 <p className="text-gray-600">Expected May 2026</p>
                 <p className="text-sm text-gray-600 mt-2">
-                  <strong>Relevant Coursework:</strong> Data Structures & Algorithms, Operating Systems, 
+                  <strong>Relevant Coursework:</strong> Data Structures & Algorithms, Operating Systems,
                   Database Systems, Software Engineering, Software Design, Computer Networking
                 </p>
               </div>
@@ -185,11 +326,62 @@ export default function App() {
 
       case 'projects':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">Project Portfolio</h2>
-            {projects.map((project, idx) => (
-              <ProjectCard key={idx} project={project} />
-            ))}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">GitHub Projects</h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Live from{" "}
+                  <a
+                    href={`https://github.com/${GITHUB_USERNAME}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    @{GITHUB_USERNAME}
+                  </a>
+                  {" "}· Updates automatically when you push new repos
+                </p>
+              </div>
+              <button
+                onClick={fetchRepos}
+                className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+
+            {loadingRepos ? (
+              <div className="grid grid-cols-1 gap-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+                    <div className="h-5 bg-gray-200 rounded w-1/3 mb-3" />
+                    <div className="h-4 bg-gray-100 rounded w-2/3 mb-4" />
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-gray-100 rounded-full w-16" />
+                      <div className="h-6 bg-gray-100 rounded-full w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : repos.length === 0 ? (
+              <div className="text-center py-16 text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <p>No repositories found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-400">{repos.length} public repositories</p>
+                {repos.map(repo => (
+                  <RepoCard key={repo.id} repo={repo} />
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -281,30 +473,10 @@ export default function App() {
       <nav className="bg-white border-t border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex flex-wrap justify-center gap-4">
-            <NavButton 
-              section="about" 
-              label="About" 
-              isActive={activeSection === 'about'} 
-              onClick={setActiveSection}
-            />
-            <NavButton 
-              section="projects" 
-              label="Projects" 
-              isActive={activeSection === 'projects'} 
-              onClick={setActiveSection}
-            />
-            <NavButton 
-              section="skills" 
-              label="Skills" 
-              isActive={activeSection === 'skills'} 
-              onClick={setActiveSection}
-            />
-            <NavButton 
-              section="certifications" 
-              label="Certifications" 
-              isActive={activeSection === 'certifications'} 
-              onClick={setActiveSection}
-            />
+            <NavButton section="about" label="About" isActive={activeSection === 'about'} onClick={setActiveSection} />
+            <NavButton section="projects" label="Projects" isActive={activeSection === 'projects'} onClick={setActiveSection} />
+            <NavButton section="skills" label="Skills" isActive={activeSection === 'skills'} onClick={setActiveSection} />
+            <NavButton section="certifications" label="Certifications" isActive={activeSection === 'certifications'} onClick={setActiveSection} />
           </div>
         </div>
       </nav>
@@ -317,12 +489,8 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-12">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-gray-300">
-            © 2025 Amrinder Singh. Built with React and Tailwind CSS.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Available for internship opportunities and collaboration
-          </p>
+          <p className="text-gray-300">© 2025 Amrinder Singh. Built with React and Tailwind CSS.</p>
+          <p className="text-gray-400 text-sm mt-2">Available for internship opportunities and collaboration</p>
         </div>
       </footer>
     </div>
