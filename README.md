@@ -4,7 +4,7 @@ A clean and modern personal portfolio website built with React, Vite, and Tailwi
 
 ## 🚀 Live Demo
 
-Visit the live portfolio: [https://Amuo007.github.io/portfolio](https://Amuo007.github.io/Portfolio)
+Visit the live portfolio: [https://Amuo007.github.io/portfolio](https://Amuo007.github.io/portfolio)
 
 ## 🛠️ Tech Stack
 
