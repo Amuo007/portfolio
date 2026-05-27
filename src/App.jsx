@@ -456,8 +456,8 @@ export default function App() {
           </a>
 
           <nav className="flex flex-wrap gap-5">
-            <NavLink href="#projects" label="Projects" />
             <NavLink href="#experience" label="Experience" />
+            <NavLink href="#projects" label="Projects" />
             <NavLink href="#skills" label="Skills" />
             <NavLink href="#education" label="Education" />
             <NavLink href="#contact" label="Contact" />
@@ -497,8 +497,15 @@ export default function App() {
 
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href="#projects"
+                    href="#experience"
                     className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    View Experience
+                  </a>
+
+                  <a
+                    href="#projects"
+                    className="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     View Projects
                   </a>
@@ -507,7 +514,7 @@ export default function App() {
                     href="https://github.com/Amuo007"
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     GitHub
                   </a>
@@ -531,59 +538,6 @@ export default function App() {
               </div>
             </div>
           </div>
-        </section>
-
-        <section id="projects" className="max-w-6xl mx-auto px-6 py-12">
-          <SectionHeading
-            title="Projects"
-            subtitle="Public GitHub repositories pulled live from my GitHub profile."
-          />
-
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
-              GitHub:{" "}
-              <a
-                href={`https://github.com/${GITHUB_USERNAME}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                @{GITHUB_USERNAME}
-              </a>
-            </p>
-
-            <button
-              onClick={fetchRepos}
-              className="text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {loadingRepos ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
-                >
-                  <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
-                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
-                  <div className="h-4 bg-gray-100 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : repos.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
-              No repositories found.
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-5">
-              {repos.map((repo) => (
-                <RepoCard key={repo.id} repo={repo} />
-              ))}
-            </div>
-          )}
         </section>
 
         <section id="experience" className="max-w-6xl mx-auto px-6 py-12">
@@ -653,6 +607,59 @@ export default function App() {
               </div>
             ))}
           </div>
+        </section>
+
+        <section id="projects" className="max-w-6xl mx-auto px-6 py-12">
+          <SectionHeading
+            title="Projects"
+            subtitle="Public GitHub repositories pulled live from my GitHub profile."
+          />
+
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <p className="text-sm text-gray-500">
+              GitHub:{" "}
+              <a
+                href={`https://github.com/${GITHUB_USERNAME}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                @{GITHUB_USERNAME}
+              </a>
+            </p>
+
+            <button
+              onClick={fetchRepos}
+              className="text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {loadingRepos ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
+                >
+                  <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
+                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : repos.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
+              No repositories found.
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-5">
+              {repos.map((repo) => (
+                <RepoCard key={repo.id} repo={repo} />
+              ))}
+            </div>
+          )}
         </section>
 
         <section id="skills" className="max-w-6xl mx-auto px-6 py-12">
