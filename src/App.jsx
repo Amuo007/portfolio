@@ -3,6 +3,18 @@ import { useEffect, useState } from "react";
 const GITHUB_USERNAME = "Amuo007";
 const EXCLUDED_REPOS = [];
 
+// Using RegExp constructors prevents the Markdown link patterns
+// from being mangled when copied between editors.
+const MARKDOWN_LINK_TEXT_REGEX = new RegExp(
+  "\\[([^\\]]+)\\]\\([^)]+\\)",
+  "g"
+);
+
+const MARKDOWN_LINK_REGEX = new RegExp(
+  "\\[([^\\]]+)\\]\\(([^)]+)\\)",
+  "g"
+);
+
 export default function App() {
   const [repos, setRepos] = useState([]);
   const [repoDetails, setRepoDetails] = useState({});
@@ -75,7 +87,7 @@ export default function App() {
       }
 
       const clean = trimmed
-        .replace(/$begin:math:display$\(\[\^$end:math:display$]+)\]$begin:math:text$\[\^\)\]\+$end:math:text$/g, "$1")
+        .replace(MARKDOWN_LINK_TEXT_REGEX, "$1")
         .replace(/\*\*(.+?)\*\*/g, "$1")
         .replace(/\*(.+?)\*/g, "$1")
         .replace(/`([^`]+)`/g, "$1")
@@ -215,7 +227,7 @@ export default function App() {
         '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>'
       )
       .replace(
-        /$begin:math:display$\(\[\^$end:math:display$]+)\]$begin:math:text$\(\[\^\)\]\+\)$end:math:text$/g,
+        MARKDOWN_LINK_REGEX,
         '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
       )
       .replace(
@@ -613,7 +625,7 @@ export default function App() {
           />
 
           <div className="space-y-6">
-            {experiences.map((exp, idx) => (
+            {experiences.map((exp) => (
               <div
                 key={`${exp.company}-${exp.role}`}
                 className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
@@ -704,11 +716,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                trackEvent(
-                  "Projects",
-                  "Click",
-                  "Refresh Repositories"
-                );
+                trackEvent("Projects", "Click", "Refresh Repositories");
                 fetchRepos();
               }}
               className="text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
@@ -876,11 +884,7 @@ export default function App() {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() =>
-                      trackEvent(
-                        "Contact",
-                        "Click",
-                        "Contact GitHub"
-                      )
+                      trackEvent("Contact", "Click", "Contact GitHub")
                     }
                     className="text-blue-600 hover:underline"
                   >
@@ -892,11 +896,7 @@ export default function App() {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() =>
-                      trackEvent(
-                        "Contact",
-                        "Click",
-                        "Contact LinkedIn"
-                      )
+                      trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
                     className="text-blue-600 hover:underline"
                   >
@@ -906,11 +906,7 @@ export default function App() {
                   <a
                     href="mailto:Amrinderbalharjob@gmail.com"
                     onClick={() =>
-                      trackEvent(
-                        "Contact",
-                        "Click",
-                        "Email Me Link"
-                      )
+                      trackEvent("Contact", "Click", "Email Me Link")
                     }
                     className="text-blue-600 hover:underline"
                   >
