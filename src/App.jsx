@@ -10,6 +10,12 @@ export default function App() {
   const [expandedRepo, setExpandedRepo] = useState(null);
   const [loadingReadme, setLoadingReadme] = useState(null);
 
+  const trackEvent = (category, action, name) => {
+    if (typeof window !== "undefined" && window._paq) {
+      window._paq.push(["trackEvent", category, action, name]);
+    }
+  };
+
   useEffect(() => {
     fetchRepos();
   }, []);
@@ -21,6 +27,10 @@ export default function App() {
       const res = await fetch(
         `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=100`
       );
+
+      if (!res.ok) {
+        throw new Error(`GitHub API error: ${res.status}`);
+      }
 
       const data = await res.json();
 
@@ -37,9 +47,9 @@ export default function App() {
       });
     } catch (err) {
       console.error("Failed to fetch repos:", err);
+    } finally {
+      setLoadingRepos(false);
     }
-
-    setLoadingRepos(false);
   };
 
   const extractSummary = (md) => {
@@ -47,7 +57,7 @@ export default function App() {
 
     const lines = md.split("\n");
 
-    for (let line of lines) {
+    for (const line of lines) {
       const trimmed = line.trim();
 
       if (
@@ -65,14 +75,14 @@ export default function App() {
       }
 
       const clean = trimmed
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/$begin:math:display$\(\[\^$end:math:display$]+)\]$begin:math:text$\[\^\)\]\+$end:math:text$/g, "$1")
         .replace(/\*\*(.+?)\*\*/g, "$1")
         .replace(/\*(.+?)\*/g, "$1")
         .replace(/`([^`]+)`/g, "$1")
         .trim();
 
       if (clean.length > 20) {
-        return clean.length > 180 ? clean.slice(0, 180) + "…" : clean;
+        return clean.length > 180 ? `${clean.slice(0, 180)}…` : clean;
       }
     }
 
@@ -83,7 +93,11 @@ export default function App() {
     try {
       const res = await fetch(
         `https://api.github.com/repos/${GITHUB_USERNAME}/${repoName}/readme`,
-        { headers: { Accept: "application/vnd.github.raw" } }
+        {
+          headers: {
+            Accept: "application/vnd.github.raw",
+          },
+        }
       );
 
       if (res.ok) {
@@ -122,7 +136,11 @@ export default function App() {
     try {
       const res = await fetch(
         `https://api.github.com/repos/${GITHUB_USERNAME}/${repoName}/readme`,
-        { headers: { Accept: "application/vnd.github.raw" } }
+        {
+          headers: {
+            Accept: "application/vnd.github.raw",
+          },
+        }
       );
 
       if (res.ok) {
@@ -156,10 +174,10 @@ export default function App() {
           summary: null,
         },
       }));
+    } finally {
+      setLoadingReadme(null);
+      setExpandedRepo(repoName);
     }
-
-    setLoadingReadme(null);
-    setExpandedRepo(repoName);
   };
 
   const toggleReadme = (repoName) => {
@@ -175,7 +193,7 @@ export default function App() {
       return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
     }
 
-    let html = md
+    const html = md
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -197,7 +215,7 @@ export default function App() {
         '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>'
       )
       .replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
+        /$begin:math:display$\(\[\^$end:math:display$]+)\]$begin:math:text$\(\[\^\)\]\+\)$end:math:text$/g,
         '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
       )
       .replace(
@@ -331,6 +349,7 @@ export default function App() {
   const NavLink = ({ href, label }) => (
     <a
       href={href}
+      onClick={() => trackEvent("Navigation", "Click", label)}
       className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
     >
       {label}
@@ -358,6 +377,20 @@ export default function App() {
     const description = repo.description || details?.summary;
     const summaryLoading = !repo.description && details === undefined;
 
+    const handleRepositoryClick = () => {
+      trackEvent("Projects", "Open Repository", repo.name);
+    };
+
+    const handleReadmeClick = () => {
+      trackEvent(
+        "Projects",
+        isExpanded ? "Hide README" : "View README",
+        repo.name
+      );
+
+      toggleReadme(repo.name);
+    };
+
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
         <div className="p-6">
@@ -367,6 +400,7 @@ export default function App() {
                 href={repo.html_url}
                 target="_blank"
                 rel="noreferrer"
+                onClick={handleRepositoryClick}
                 className="text-xl font-bold text-gray-900 hover:text-blue-600"
               >
                 {repo.name}
@@ -377,7 +411,9 @@ export default function App() {
                   <span className="flex items-center gap-1.5">
                     <span
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getLanguageColor(repo.language) }}
+                      style={{
+                        backgroundColor: getLanguageColor(repo.language),
+                      }}
                     />
                     {repo.language}
                   </span>
@@ -385,8 +421,13 @@ export default function App() {
 
                 <span>Updated {formatDate(repo.updated_at)}</span>
 
-                {repo.stargazers_count > 0 && <span>★ {repo.stargazers_count}</span>}
-                {repo.forks_count > 0 && <span>Forks {repo.forks_count}</span>}
+                {repo.stargazers_count > 0 && (
+                  <span>★ {repo.stargazers_count}</span>
+                )}
+
+                {repo.forks_count > 0 && (
+                  <span>Forks {repo.forks_count}</span>
+                )}
               </div>
             </div>
 
@@ -394,6 +435,7 @@ export default function App() {
               href={repo.html_url}
               target="_blank"
               rel="noreferrer"
+              onClick={handleRepositoryClick}
               className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
             >
               GitHub
@@ -404,9 +446,13 @@ export default function App() {
             {summaryLoading ? (
               <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
             ) : description ? (
-              <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                {description}
+              </p>
             ) : (
-              <p className="text-gray-400 text-sm italic">No description available</p>
+              <p className="text-gray-400 text-sm italic">
+                No description available
+              </p>
             )}
           </div>
 
@@ -424,14 +470,15 @@ export default function App() {
           )}
 
           <button
-            onClick={() => toggleReadme(repo.name)}
+            type="button"
+            onClick={handleReadmeClick}
             className="text-sm text-blue-600 hover:underline font-medium"
           >
             {isLoading
               ? "Loading README..."
               : isExpanded
-              ? "Hide README"
-              : "View README"}
+                ? "Hide README"
+                : "View README"}
           </button>
         </div>
 
@@ -451,7 +498,11 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <a href="#home" className="font-bold text-xl text-gray-900">
+          <a
+            href="#home"
+            onClick={() => trackEvent("Navigation", "Click", "Home")}
+            className="font-bold text-xl text-gray-900"
+          >
             Amrinder Singh
           </a>
 
@@ -491,13 +542,16 @@ export default function App() {
                 <p className="text-gray-700 leading-relaxed max-w-3xl mb-6">
                   Computer Science student at the University of Houston building
                   full-stack, AI, and AR applications. Currently working as a
-                  Software Engineer Intern at Geometris LP and researching offline
-                  search using embeddings and RAG for Internet-in-a-Box.
+                  Software Engineer Intern at Geometris LP and researching
+                  offline search using embeddings and RAG for Internet-in-a-Box.
                 </p>
 
                 <div className="flex flex-wrap gap-3">
                   <a
                     href="#experience"
+                    onClick={() =>
+                      trackEvent("Hero", "Click", "View Experience")
+                    }
                     className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     View Experience
@@ -505,6 +559,9 @@ export default function App() {
 
                   <a
                     href="#projects"
+                    onClick={() =>
+                      trackEvent("Hero", "Click", "View Projects")
+                    }
                     className="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     View Projects
@@ -514,6 +571,9 @@ export default function App() {
                     href="https://github.com/Amuo007"
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() =>
+                      trackEvent("Contact", "Click", "GitHub Profile")
+                    }
                     className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     GitHub
@@ -523,6 +583,9 @@ export default function App() {
                     href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() =>
+                      trackEvent("Contact", "Click", "LinkedIn Profile")
+                    }
                     className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     LinkedIn
@@ -530,6 +593,9 @@ export default function App() {
 
                   <a
                     href="mailto:Amrinderbalharjob@gmail.com"
+                    onClick={() =>
+                      trackEvent("Contact", "Click", "Hero Email")
+                    }
                     className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Email
@@ -549,7 +615,7 @@ export default function App() {
           <div className="space-y-6">
             {experiences.map((exp, idx) => (
               <div
-                key={idx}
+                key={`${exp.company}-${exp.role}`}
                 className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
               >
                 <div className="flex flex-col md:flex-row gap-5">
@@ -577,10 +643,14 @@ export default function App() {
                         <h3 className="text-xl font-bold text-gray-900">
                           {exp.role}
                         </h3>
+
                         <p className="text-blue-700 font-semibold">
                           {exp.company} · {exp.type}
                         </p>
-                        <p className="text-gray-500 text-sm mt-1">{exp.location}</p>
+
+                        <p className="text-gray-500 text-sm mt-1">
+                          {exp.location}
+                        </p>
                       </div>
 
                       <span className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full w-fit">
@@ -589,8 +659,8 @@ export default function App() {
                     </div>
 
                     <ul className="space-y-2 text-gray-700 text-sm mb-4">
-                      {exp.description.map((item, itemIdx) => (
-                        <li key={itemIdx} className="flex gap-2">
+                      {exp.description.map((item) => (
+                        <li key={item} className="flex gap-2">
                           <span className="text-blue-600">•</span>
                           <span>{item}</span>
                         </li>
@@ -622,6 +692,9 @@ export default function App() {
                 href={`https://github.com/${GITHUB_USERNAME}`}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() =>
+                  trackEvent("Projects", "Click", "GitHub Username")
+                }
                 className="text-blue-600 hover:underline font-medium"
               >
                 @{GITHUB_USERNAME}
@@ -629,7 +702,15 @@ export default function App() {
             </p>
 
             <button
-              onClick={fetchRepos}
+              type="button"
+              onClick={() => {
+                trackEvent(
+                  "Projects",
+                  "Click",
+                  "Refresh Repositories"
+                );
+                fetchRepos();
+              }}
               className="text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Refresh
@@ -703,7 +784,9 @@ export default function App() {
                 Bachelor of Science in Computer Science
               </p>
 
-              <p className="text-gray-500 mt-1">Expected Graduation: May 2026</p>
+              <p className="text-gray-500 mt-1">
+                Expected Graduation: December 2026
+              </p>
 
               <p className="text-gray-700 text-sm mt-4 leading-relaxed">
                 Relevant coursework includes Data Structures & Algorithms,
@@ -718,12 +801,17 @@ export default function App() {
               </h3>
 
               <div className="space-y-4">
-                {certifications.map((cert, idx) => (
-                  <div key={idx} className="border-l-4 border-green-500 pl-4">
+                {certifications.map((cert) => (
+                  <div
+                    key={`${cert.title}-${cert.issued}`}
+                    className="border-l-4 border-green-500 pl-4"
+                  >
                     <p className="font-semibold text-gray-900">{cert.title}</p>
+
                     <p className="text-sm text-gray-600">
                       {cert.issuer} · Issued {cert.issued}
                     </p>
+
                     {cert.credentialId && (
                       <p className="text-sm text-gray-500">
                         Credential ID: {cert.credentialId}
@@ -758,6 +846,13 @@ export default function App() {
                     <strong>Email:</strong>{" "}
                     <a
                       href="mailto:Amrinderbalharjob@gmail.com"
+                      onClick={() =>
+                        trackEvent(
+                          "Contact",
+                          "Click",
+                          "Contact Section Email"
+                        )
+                      }
                       className="text-blue-600 hover:underline"
                     >
                       Amrinderbalharjob@gmail.com
@@ -771,13 +866,22 @@ export default function App() {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Links</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Links
+                </h3>
 
                 <div className="flex flex-col gap-2">
                   <a
                     href="https://github.com/Amuo007"
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() =>
+                      trackEvent(
+                        "Contact",
+                        "Click",
+                        "Contact GitHub"
+                      )
+                    }
                     className="text-blue-600 hover:underline"
                   >
                     GitHub
@@ -787,6 +891,13 @@ export default function App() {
                     href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() =>
+                      trackEvent(
+                        "Contact",
+                        "Click",
+                        "Contact LinkedIn"
+                      )
+                    }
                     className="text-blue-600 hover:underline"
                   >
                     LinkedIn
@@ -794,6 +905,13 @@ export default function App() {
 
                   <a
                     href="mailto:Amrinderbalharjob@gmail.com"
+                    onClick={() =>
+                      trackEvent(
+                        "Contact",
+                        "Click",
+                        "Email Me Link"
+                      )
+                    }
                     className="text-blue-600 hover:underline"
                   >
                     Email Me
