@@ -105,7 +105,7 @@ const renderMarkdown = (md) => {
     )
     .replace(
       MARKDOWN_LINK_REGEX,
-      '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noreferrer" class="text-red-600 hover:underline">$1</a>'
     )
     .replace(
       /^\s*[-*] (.+)$/gm,
@@ -145,16 +145,16 @@ const experiences = [
     role: "Undergraduate Student Researcher",
     company: "University of Houston",
     type: "Full-time",
-    dates: "Jan 2026 – Present",
+    dates: "Jan 2026 – Aug 2026",
     location: "United States · On-site",
     image:
       "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/poster.jpg",
     logo: "UH",
     logoColor: "bg-red-600",
     description: [
-      "Working on Internet-in-a-Box and exploring ways to improve search using embeddings and retrieval-augmented generation.",
-      "Evaluating how offline search and AI-assisted retrieval perform on low-end Android devices.",
-      "Exploring practical educational search systems for environments with limited internet access.",
+      "Worked on Internet-in-a-Box and explored ways to improve search using embeddings and retrieval-augmented generation.",
+      "Evaluated how offline search and AI-assisted retrieval perform on low-end Android devices.",
+      "Explored practical educational search systems for environments with limited internet access.",
     ],
     skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
   },
@@ -218,14 +218,14 @@ const NavLink = ({ href, label }) => (
   <a
     href={href}
     onClick={() => trackEvent("Navigation", "Click", label)}
-    className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+    className="text-sm font-medium text-gray-700 hover:text-red-600 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap"
   >
     {label}
   </a>
 );
 
 const SkillTag = ({ skill }) => (
-  <span className="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-xs font-medium">
+  <span className="bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full text-xs font-medium">
     {skill}
   </span>
 );
@@ -266,7 +266,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               target="_blank"
               rel="noreferrer"
               onClick={handleRepositoryClick}
-              className="text-xl font-bold text-gray-900 hover:text-blue-600"
+              className="text-xl font-bold text-gray-900 hover:text-red-600"
             >
               {repo.name}
             </a>
@@ -337,7 +337,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <button
           type="button"
           onClick={handleReadmeClick}
-          className="text-sm text-blue-600 hover:underline font-medium"
+          className="text-sm text-red-600 hover:underline font-medium"
         >
           {isLoading
             ? "Loading README..."
@@ -507,16 +507,16 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-2.5 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
           <a
             href="#home"
             onClick={() => trackEvent("Navigation", "Click", "Home")}
-            className="font-bold text-xl text-gray-900"
+            className="font-bold text-xl text-gray-900 px-2.5 md:px-0 py-1 md:py-0"
           >
             Amrinder Singh
           </a>
 
-          <nav className="flex flex-wrap gap-5">
+          <nav className="no-scrollbar flex overflow-x-auto md:overflow-visible -mx-4 px-1.5 md:mx-0 md:px-0 gap-0 md:gap-2">
             <NavLink href="#experience" label="Experience" />
             <NavLink href="#projects" label="Projects" />
             <NavLink href="#skills" label="Skills" />
@@ -533,11 +533,11 @@ export default function App() {
               <img
                 src="https://github.com/Amuo007/portfolio/blob/main/profile.jpeg?raw=true"
                 alt="Portrait of Amrinder Singh"
-                className="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-blue-600 shadow-md"
+                className="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md"
               />
 
               <div className="flex-1">
-                <p className="text-blue-600 font-semibold mb-2">
+                <p className="text-red-600 font-semibold mb-2">
                   Software Engineer Intern · Computer Science Student
                 </p>
 
@@ -552,63 +552,96 @@ export default function App() {
                 <p className="text-gray-700 leading-relaxed max-w-3xl mb-6">
                   Computer Science student at the University of Houston building
                   full-stack, AI, and AR applications. Currently working as a
-                  Software Engineer Intern at Geometris LP and researching
+                  Software Engineer Intern at Geometris LP. Previously researched
                   offline search using embeddings and RAG for Internet-in-a-Box.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
-                  <a
-                    href="#experience"
-                    onClick={() =>
-                      trackEvent("Hero", "Click", "View Experience")
-                    }
-                    className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    View Experience
-                  </a>
-
+                <div className="flex flex-wrap items-center gap-3">
                   <a
                     href="#projects"
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 transition-colors font-medium"
                   >
                     View Projects
+                  </a>
+
+                  <a
+                    href="#experience"
+                    onClick={() =>
+                      trackEvent("Hero", "Click", "View Experience")
+                    }
+                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    View Experience
                   </a>
 
                   <a
                     href="https://github.com/Amuo007"
                     target="_blank"
                     rel="noreferrer"
+                    aria-label="GitHub profile"
+                    title="GitHub"
                     onClick={() =>
                       trackEvent("Contact", "Click", "GitHub Profile")
                     }
-                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
                   >
-                    GitHub
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.73.083-.73 1.205.084 1.84 1.236 1.84 1.236 1.07 1.835 2.807 1.305 3.492.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.627-5.373-12-12-12z" />
+                    </svg>
                   </a>
 
                   <a
                     href="https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
                     target="_blank"
                     rel="noreferrer"
+                    aria-label="LinkedIn profile"
+                    title="LinkedIn"
                     onClick={() =>
                       trackEvent("Contact", "Click", "LinkedIn Profile")
                     }
-                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
                   >
-                    LinkedIn
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
+                    </svg>
                   </a>
 
                   <a
                     href="mailto:Amrinderbalharjob@gmail.com"
+                    aria-label="Send email"
+                    title="Email"
                     onClick={() =>
                       trackEvent("Contact", "Click", "Hero Email")
                     }
-                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
                   >
-                    Email
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                      />
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -635,7 +668,7 @@ export default function App() {
                         src={exp.image}
                         alt={exp.company}
                         loading="lazy"
-                        className="w-full md:w-40 h-28 object-cover rounded-xl border border-gray-200"
+                        className="w-full md:w-40 h-48 md:h-28 object-cover rounded-xl border border-gray-200"
                       />
                     ) : (
                       <div className="w-full md:w-40 h-28 rounded-xl bg-gray-900 text-white flex items-center justify-center">
@@ -655,7 +688,7 @@ export default function App() {
                           {exp.role}
                         </h3>
 
-                        <p className="text-blue-700 font-semibold">
+                        <p className="text-red-700 font-semibold">
                           {exp.company} · {exp.type}
                         </p>
 
@@ -664,7 +697,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      <span className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full w-fit">
+                      <span className="text-sm bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full w-fit">
                         {exp.dates}
                       </span>
                     </div>
@@ -672,7 +705,7 @@ export default function App() {
                     <ul className="space-y-2 text-gray-700 text-sm mb-4">
                       {exp.description.map((item) => (
                         <li key={item} className="flex gap-2">
-                          <span className="text-blue-600">•</span>
+                          <span className="text-red-600">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -706,7 +739,7 @@ export default function App() {
                 onClick={() =>
                   trackEvent("Projects", "Click", "GitHub Username")
                 }
-                className="text-blue-600 hover:underline font-medium"
+                className="text-red-600 hover:underline font-medium"
               >
                 @{GITHUB_USERNAME}
               </a>
@@ -834,7 +867,7 @@ export default function App() {
                 {certifications.map((cert) => (
                   <div
                     key={`${cert.title}-${cert.issued}`}
-                    className="border-l-4 border-green-500 pl-4"
+                    className="border-l-4 border-red-500 pl-4"
                   >
                     <p className="font-semibold text-gray-900">{cert.title}</p>
 
@@ -883,7 +916,7 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="text-blue-600 hover:underline"
+                      className="text-red-600 hover:underline"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
@@ -908,7 +941,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact GitHub")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     GitHub
                   </a>
@@ -920,7 +953,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     LinkedIn
                   </a>
@@ -930,7 +963,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Email Me Link")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     Email Me
                   </a>
