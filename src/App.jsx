@@ -214,6 +214,182 @@ const certifications = [
   },
 ];
 
+const CONTRIB_COLORS = [
+  "bg-gray-100",
+  "bg-red-200",
+  "bg-red-400",
+  "bg-red-600",
+  "bg-red-800",
+];
+
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const ContributionGraph = () => {
+  const [contribData, setContribData] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `https://github-contributions-api.jogruber.de/v4/${GITHUB_USERNAME}?y=last`
+        );
+
+        if (!res.ok) {
+          throw new Error(`Contributions API error: ${res.status}`);
+        }
+
+        const json = await res.json();
+
+        if (!cancelled) {
+          setContribData(json);
+        }
+      } catch (err) {
+        console.error("Failed to fetch contributions:", err);
+
+        if (!cancelled) {
+          setFailed(true);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (failed) return null;
+
+  if (!contribData) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 animate-pulse">
+        <div className="h-5 bg-gray-200 rounded w-48 mb-4" />
+        <div className="h-24 bg-gray-100 rounded" />
+      </div>
+    );
+  }
+
+  const days = contribData.contributions;
+  const totalLastYear = contribData.total?.lastYear ?? 0;
+
+  const weeks = [];
+  const firstDow = new Date(`${days[0].date}T00:00:00`).getDay();
+  let week = new Array(firstDow).fill(null);
+
+  for (const day of days) {
+    week.push(day);
+
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+  }
+
+  if (week.length > 0) {
+    weeks.push(week);
+  }
+
+  const monthOfWeek = weeks.map((w) => {
+    const firstDay = w.find(Boolean);
+    return firstDay
+      ? new Date(`${firstDay.date}T00:00:00`).getMonth()
+      : null;
+  });
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
+        <h3 className="text-lg font-bold text-gray-900">GitHub Activity</h3>
+
+        <p className="text-sm text-gray-500">
+          <span className="font-semibold text-red-600">
+            {totalLastYear.toLocaleString()}
+          </span>{" "}
+          contributions in the last year
+        </p>
+      </div>
+
+      <div className="overflow-x-auto no-scrollbar">
+        <div className="inline-block">
+          <div className="flex gap-[3px] ml-8 mb-1">
+            {monthOfWeek.map((month, i) => (
+              <div
+                key={i}
+                className="w-2.5 text-[10px] text-gray-500 overflow-visible whitespace-nowrap"
+              >
+                {month !== null && month !== monthOfWeek[i - 1]
+                  ? MONTH_LABELS[month]
+                  : ""}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex">
+            <div className="flex flex-col gap-[3px] w-8 text-[10px] text-gray-500 pr-1">
+              {["", "Mon", "", "Wed", "", "Fri", ""].map((label, i) => (
+                <div key={i} className="h-2.5 leading-[10px]">
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-[3px]">
+              {weeks.map((w, wi) => (
+                <div key={wi} className="flex flex-col gap-[3px]">
+                  {Array.from({ length: 7 }, (_, di) => {
+                    const day = w[di];
+
+                    if (!day) {
+                      return <div key={di} className="w-2.5 h-2.5" />;
+                    }
+
+                    return (
+                      <div
+                        key={di}
+                        title={`${day.count} contribution${
+                          day.count === 1 ? "" : "s"
+                        } on ${day.date}`}
+                        className={`w-2.5 h-2.5 rounded-[2px] ${
+                          CONTRIB_COLORS[day.level] || CONTRIB_COLORS[0]
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-1 mt-2 text-[10px] text-gray-500">
+            <span className="mr-1">Less</span>
+            {CONTRIB_COLORS.map((color) => (
+              <div key={color} className={`w-2.5 h-2.5 rounded-[2px] ${color}`} />
+            ))}
+            <span className="ml-1">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const NavLink = ({ href, label }) => (
   <a
     href={href}
@@ -756,6 +932,8 @@ export default function App() {
               Refresh
             </button>
           </div>
+
+          <ContributionGraph />
 
           {loadingRepos ? (
             <div className="space-y-4">
