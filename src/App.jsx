@@ -15,18 +15,357 @@ const MARKDOWN_LINK_REGEX = new RegExp(
   "g"
 );
 
+const LANGUAGE_COLORS = {
+  JavaScript: "#f7df1e",
+  TypeScript: "#3178c6",
+  Python: "#3572A5",
+  Swift: "#F05138",
+  Java: "#b07219",
+  "C++": "#f34b7d",
+  HTML: "#e34c26",
+  CSS: "#563d7c",
+  Go: "#00ADD8",
+  Rust: "#dea584",
+  Ruby: "#701516",
+  Kotlin: "#A97BFF",
+  Dart: "#00B4AB",
+  "C#": "#6b46c1",
+};
+
+const getLanguageColor = (lang) => LANGUAGE_COLORS[lang] || "#8b949e";
+
+const trackEvent = (category, action, name) => {
+  if (typeof window !== "undefined" && window._paq) {
+    window._paq.push(["trackEvent", category, action, name]);
+  }
+};
+
+const extractSummary = (md) => {
+  if (!md) return null;
+
+  const lines = md.split("\n");
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (
+      !trimmed ||
+      trimmed.startsWith("#") ||
+      trimmed.startsWith("!") ||
+      trimmed.startsWith("<") ||
+      trimmed.startsWith("```") ||
+      trimmed.startsWith("|") ||
+      trimmed.startsWith("---") ||
+      trimmed.startsWith("*") ||
+      trimmed.startsWith("-")
+    ) {
+      continue;
+    }
+
+    const clean = trimmed
+      .replace(MARKDOWN_LINK_TEXT_REGEX, "$1")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .trim();
+
+    if (clean.length > 20) {
+      return clean.length > 180 ? `${clean.slice(0, 180)}…` : clean;
+    }
+  }
+
+  return null;
+};
+
+const renderMarkdown = (md) => {
+  if (!md) {
+    return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
+  }
+
+  const html = md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(
+      /^### (.+)$/gm,
+      '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>'
+    )
+    .replace(
+      /^## (.+)$/gm,
+      '<h2 class="text-lg font-bold text-gray-900 mt-5 mb-2">$1</h2>'
+    )
+    .replace(
+      /^# (.+)$/gm,
+      '<h1 class="text-xl font-bold text-gray-900 mt-5 mb-2">$1</h1>'
+    )
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(
+      /`([^`]+)`/g,
+      '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>'
+    )
+    .replace(
+      MARKDOWN_LINK_REGEX,
+      '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
+    )
+    .replace(
+      /^\s*[-*] (.+)$/gm,
+      '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>'
+    )
+    .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
+    .replace(/\n/g, "<br/>");
+
+  return `<p class="text-gray-700 text-sm mb-2">${html}</p>`;
+};
+
+const formatDate = (dateStr) =>
+  new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+  });
+
+const experiences = [
+  {
+    role: "Software Engineer Intern",
+    company: "Geometris LP",
+    type: "Full-time",
+    dates: "May 2026 – Present",
+    location: "Houston, TX · On-site",
+    image:
+      "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/intern.jpg",
+    logo: "G",
+    logoColor: "bg-blue-600",
+    description: [
+      "Working in a professional software engineering environment on real development tasks and internal engineering workflows.",
+      "Contributing to debugging, feature improvements, and application-related tasks.",
+      "Gaining hands-on experience collaborating with engineers and working with production-oriented systems.",
+    ],
+    skills: ["Software Engineering", "JavaScript", "React", "Debugging"],
+  },
+  {
+    role: "Undergraduate Student Researcher",
+    company: "University of Houston",
+    type: "Full-time",
+    dates: "Jan 2026 – Present",
+    location: "United States · On-site",
+    image:
+      "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/poster.jpg",
+    logo: "UH",
+    logoColor: "bg-red-600",
+    description: [
+      "Working on Internet-in-a-Box and exploring ways to improve search using embeddings and retrieval-augmented generation.",
+      "Evaluating how offline search and AI-assisted retrieval perform on low-end Android devices.",
+      "Exploring practical educational search systems for environments with limited internet access.",
+    ],
+    skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
+  },
+  {
+    role: "Software Engineer",
+    company: "Stealth",
+    type: "Internship",
+    dates: "Jan 2026 – May 2026",
+    location: "Remote",
+    image: null,
+    logo: "S",
+    logoColor: "bg-gray-900",
+    description: [
+      "Contributed to an AR development team building applications for Meta Quest 3.",
+      "Supported Unity-based development workflows for immersive application features.",
+      "Collaborated in a remote engineering environment to help deliver AR-related functionality.",
+    ],
+    skills: ["Unity", "C#", "JavaScript", "AR Development", "Meta Quest 3"],
+  },
+];
+
+const skills = {
+  Languages: ["JavaScript", "Python", "Java", "Swift", "C++", "C#"],
+  Frontend: ["React", "HTML", "CSS", "Tailwind CSS"],
+  Backend: ["Node.js", "Express.js", "REST APIs"],
+  "Mobile / AR": ["iOS", "SwiftUI", "Android", "Unity", "Meta Quest 3", "ARKit"],
+  "AI / Research": ["RAG", "Embeddings", "Machine Learning", "TensorFlow"],
+  Tools: ["Git", "GitHub", "Docker", "Firebase", "MongoDB", "PostgreSQL"],
+};
+
+const certifications = [
+  {
+    title: "Complete Data Science & Machine Learning Bootcamp",
+    issuer: "Udemy",
+    issued: "Jan 2022",
+  },
+  {
+    title: "Tensorflow 2: Deep Learning & Artificial Intelligence",
+    issuer: "Udemy",
+    issued: "May 2024",
+  },
+  {
+    title: "iOS & Swift - The Complete iOS App Development Bootcamp",
+    issuer: "Udemy",
+    issued: "Dec 2023",
+  },
+  {
+    title: "The Complete Full-Stack Web Development Bootcamp",
+    issuer: "Udemy",
+    issued: "May 2022",
+  },
+  {
+    title: "Electronic Arts - Software Engineering Job Simulation",
+    issuer: "Forage",
+    issued: "Feb 2025",
+    credentialId: "69W4vPnb6zwW6gq75",
+  },
+];
+
+const NavLink = ({ href, label }) => (
+  <a
+    href={href}
+    onClick={() => trackEvent("Navigation", "Click", label)}
+    className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+  >
+    {label}
+  </a>
+);
+
+const SkillTag = ({ skill }) => (
+  <span className="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-xs font-medium">
+    {skill}
+  </span>
+);
+
+const SectionHeading = ({ title, subtitle }) => (
+  <div className="mb-8">
+    <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
+    {subtitle && <p className="text-gray-500 mt-2">{subtitle}</p>}
+  </div>
+);
+
+const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
+  const readme = details?.readme;
+  const description = repo.description || details?.summary;
+  const summaryLoading = !repo.description && details === undefined;
+
+  const handleRepositoryClick = () => {
+    trackEvent("Projects", "Open Repository", repo.name);
+  };
+
+  const handleReadmeClick = () => {
+    trackEvent(
+      "Projects",
+      isExpanded ? "Hide README" : "View README",
+      repo.name
+    );
+
+    onToggleReadme(repo.name);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+          <div>
+            <a
+              href={repo.html_url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={handleRepositoryClick}
+              className="text-xl font-bold text-gray-900 hover:text-blue-600"
+            >
+              {repo.name}
+            </a>
+
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
+              {repo.language && (
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{
+                      backgroundColor: getLanguageColor(repo.language),
+                    }}
+                  />
+                  {repo.language}
+                </span>
+              )}
+
+              <span>Updated {formatDate(repo.updated_at)}</span>
+
+              {repo.stargazers_count > 0 && (
+                <span>★ {repo.stargazers_count}</span>
+              )}
+
+              {repo.forks_count > 0 && (
+                <span>Forks {repo.forks_count}</span>
+              )}
+            </div>
+          </div>
+
+          <a
+            href={repo.html_url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={handleRepositoryClick}
+            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            GitHub
+          </a>
+        </div>
+
+        <div className="mb-4">
+          {summaryLoading ? (
+            <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+          ) : description ? (
+            <p className="text-gray-700 text-sm leading-relaxed">
+              {description}
+            </p>
+          ) : (
+            <p className="text-gray-400 text-sm italic">
+              No description available
+            </p>
+          )}
+        </div>
+
+        {repo.topics && repo.topics.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {repo.topics.slice(0, 8).map((topic) => (
+              <span
+                key={topic}
+                className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleReadmeClick}
+          className="text-sm text-blue-600 hover:underline font-medium"
+        >
+          {isLoading
+            ? "Loading README..."
+            : isExpanded
+              ? "Hide README"
+              : "View README"}
+        </button>
+      </div>
+
+      {isExpanded && (
+        <div className="border-t border-gray-200 bg-gray-50 px-6 py-5">
+          <div
+            className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(readme) }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function App() {
   const [repos, setRepos] = useState([]);
   const [repoDetails, setRepoDetails] = useState({});
   const [loadingRepos, setLoadingRepos] = useState(true);
+  const [repoError, setRepoError] = useState(false);
   const [expandedRepo, setExpandedRepo] = useState(null);
   const [loadingReadme, setLoadingReadme] = useState(null);
-
-  const trackEvent = (category, action, name) => {
-    if (typeof window !== "undefined" && window._paq) {
-      window._paq.push(["trackEvent", category, action, name]);
-    }
-  };
 
   useEffect(() => {
     fetchRepos();
@@ -34,6 +373,7 @@ export default function App() {
 
   const fetchRepos = async () => {
     setLoadingRepos(true);
+    setRepoError(false);
 
     try {
       const res = await fetch(
@@ -59,46 +399,10 @@ export default function App() {
       });
     } catch (err) {
       console.error("Failed to fetch repos:", err);
+      setRepoError(true);
     } finally {
       setLoadingRepos(false);
     }
-  };
-
-  const extractSummary = (md) => {
-    if (!md) return null;
-
-    const lines = md.split("\n");
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (
-        !trimmed ||
-        trimmed.startsWith("#") ||
-        trimmed.startsWith("!") ||
-        trimmed.startsWith("<") ||
-        trimmed.startsWith("```") ||
-        trimmed.startsWith("|") ||
-        trimmed.startsWith("---") ||
-        trimmed.startsWith("*") ||
-        trimmed.startsWith("-")
-      ) {
-        continue;
-      }
-
-      const clean = trimmed
-        .replace(MARKDOWN_LINK_TEXT_REGEX, "$1")
-        .replace(/\*\*(.+?)\*\*/g, "$1")
-        .replace(/\*(.+?)\*/g, "$1")
-        .replace(/`([^`]+)`/g, "$1")
-        .trim();
-
-      if (clean.length > 20) {
-        return clean.length > 180 ? `${clean.slice(0, 180)}…` : clean;
-      }
-    }
-
-    return null;
   };
 
   const fetchReadmeSummary = async (repoName) => {
@@ -200,312 +504,6 @@ export default function App() {
     }
   };
 
-  const renderMarkdown = (md) => {
-    if (!md) {
-      return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
-    }
-
-    const html = md
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(
-        /^### (.+)$/gm,
-        '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>'
-      )
-      .replace(
-        /^## (.+)$/gm,
-        '<h2 class="text-lg font-bold text-gray-900 mt-5 mb-2">$1</h2>'
-      )
-      .replace(
-        /^# (.+)$/gm,
-        '<h1 class="text-xl font-bold text-gray-900 mt-5 mb-2">$1</h1>'
-      )
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>'
-      )
-      .replace(
-        MARKDOWN_LINK_REGEX,
-        '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
-      )
-      .replace(
-        /^\s*[-*] (.+)$/gm,
-        '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>'
-      )
-      .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
-      .replace(/\n/g, "<br/>");
-
-    return `<p class="text-gray-700 text-sm mb-2">${html}</p>`;
-  };
-
-  const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-    });
-
-  const getLanguageColor = (lang) => {
-    const colors = {
-      JavaScript: "#f7df1e",
-      TypeScript: "#3178c6",
-      Python: "#3572A5",
-      Swift: "#F05138",
-      Java: "#b07219",
-      "C++": "#f34b7d",
-      HTML: "#e34c26",
-      CSS: "#563d7c",
-      Go: "#00ADD8",
-      Rust: "#dea584",
-      Ruby: "#701516",
-      Kotlin: "#A97BFF",
-      Dart: "#00B4AB",
-      "C#": "#6b46c1",
-    };
-
-    return colors[lang] || "#8b949e";
-  };
-
-  const experiences = [
-    {
-      role: "Software Engineer Intern",
-      company: "Geometris LP",
-      type: "Full-time",
-      dates: "May 2026 – Present",
-      location: "Houston, TX · On-site",
-      image:
-        "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/intern.jpg",
-      logo: "G",
-      logoColor: "bg-blue-600",
-      description: [
-        "Working in a professional software engineering environment on real development tasks and internal engineering workflows.",
-        "Contributing to debugging, feature improvements, and application-related tasks.",
-        "Gaining hands-on experience collaborating with engineers and working with production-oriented systems.",
-      ],
-      skills: ["Software Engineering", "JavaScript", "React", "Debugging"],
-    },
-    {
-      role: "Undergraduate Student Researcher",
-      company: "University of Houston",
-      type: "Full-time",
-      dates: "Jan 2026 – Present",
-      location: "United States · On-site",
-      image:
-        "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/poster.jpg",
-      logo: "UH",
-      logoColor: "bg-red-600",
-      description: [
-        "Working on Internet-in-a-Box and exploring ways to improve search using embeddings and retrieval-augmented generation.",
-        "Evaluating how offline search and AI-assisted retrieval perform on low-end Android devices.",
-        "Exploring practical educational search systems for environments with limited internet access.",
-      ],
-      skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
-    },
-    {
-      role: "Software Engineer",
-      company: "Stealth",
-      type: "Internship",
-      dates: "Jan 2026 – May 2026",
-      location: "Remote",
-      image: null,
-      logo: "S",
-      logoColor: "bg-gray-900",
-      description: [
-        "Contributed to an AR development team building applications for Meta Quest 3.",
-        "Supported Unity-based development workflows for immersive application features.",
-        "Collaborated in a remote engineering environment to help deliver AR-related functionality.",
-      ],
-      skills: ["Unity", "C#", "JavaScript", "AR Development", "Meta Quest 3"],
-    },
-  ];
-
-  const skills = {
-    Languages: ["JavaScript", "Python", "Java", "Swift", "C++", "C#"],
-    Frontend: ["React", "HTML", "CSS", "Tailwind CSS"],
-    Backend: ["Node.js", "Express.js", "REST APIs"],
-    "Mobile / AR": ["iOS", "SwiftUI", "Android", "Unity", "Meta Quest 3", "ARKit"],
-    "AI / Research": ["RAG", "Embeddings", "Machine Learning", "TensorFlow"],
-    Tools: ["Git", "GitHub", "Docker", "Firebase", "MongoDB", "PostgreSQL"],
-  };
-
-  const certifications = [
-    {
-      title: "Complete Data Science & Machine Learning Bootcamp",
-      issuer: "Udemy",
-      issued: "Jan 2022",
-    },
-    {
-      title: "Tensorflow 2: Deep Learning & Artificial Intelligence",
-      issuer: "Udemy",
-      issued: "May 2024",
-    },
-    {
-      title: "iOS & Swift - The Complete iOS App Development Bootcamp",
-      issuer: "Udemy",
-      issued: "Dec 2023",
-    },
-    {
-      title: "The Complete Full-Stack Web Development Bootcamp",
-      issuer: "Udemy",
-      issued: "May 2022",
-    },
-    {
-      title: "Electronic Arts - Software Engineering Job Simulation",
-      issuer: "Forage",
-      issued: "Feb 2025",
-      credentialId: "69W4vPnb6zwW6gq75",
-    },
-  ];
-
-  const NavLink = ({ href, label }) => (
-    <a
-      href={href}
-      onClick={() => trackEvent("Navigation", "Click", label)}
-      className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-    >
-      {label}
-    </a>
-  );
-
-  const SkillTag = ({ skill }) => (
-    <span className="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-xs font-medium">
-      {skill}
-    </span>
-  );
-
-  const SectionHeading = ({ title, subtitle }) => (
-    <div className="mb-8">
-      <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
-      {subtitle && <p className="text-gray-500 mt-2">{subtitle}</p>}
-    </div>
-  );
-
-  const RepoCard = ({ repo }) => {
-    const isExpanded = expandedRepo === repo.name;
-    const isLoading = loadingReadme === repo.name;
-    const details = repoDetails[repo.name];
-    const readme = details?.readme;
-    const description = repo.description || details?.summary;
-    const summaryLoading = !repo.description && details === undefined;
-
-    const handleRepositoryClick = () => {
-      trackEvent("Projects", "Open Repository", repo.name);
-    };
-
-    const handleReadmeClick = () => {
-      trackEvent(
-        "Projects",
-        isExpanded ? "Hide README" : "View README",
-        repo.name
-      );
-
-      toggleReadme(repo.name);
-    };
-
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
-            <div>
-              <a
-                href={repo.html_url}
-                target="_blank"
-                rel="noreferrer"
-                onClick={handleRepositoryClick}
-                className="text-xl font-bold text-gray-900 hover:text-blue-600"
-              >
-                {repo.name}
-              </a>
-
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
-                {repo.language && (
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor: getLanguageColor(repo.language),
-                      }}
-                    />
-                    {repo.language}
-                  </span>
-                )}
-
-                <span>Updated {formatDate(repo.updated_at)}</span>
-
-                {repo.stargazers_count > 0 && (
-                  <span>★ {repo.stargazers_count}</span>
-                )}
-
-                {repo.forks_count > 0 && (
-                  <span>Forks {repo.forks_count}</span>
-                )}
-              </div>
-            </div>
-
-            <a
-              href={repo.html_url}
-              target="_blank"
-              rel="noreferrer"
-              onClick={handleRepositoryClick}
-              className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-
-          <div className="mb-4">
-            {summaryLoading ? (
-              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-            ) : description ? (
-              <p className="text-gray-700 text-sm leading-relaxed">
-                {description}
-              </p>
-            ) : (
-              <p className="text-gray-400 text-sm italic">
-                No description available
-              </p>
-            )}
-          </div>
-
-          {repo.topics && repo.topics.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {repo.topics.slice(0, 8).map((topic) => (
-                <span
-                  key={topic}
-                  className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full"
-                >
-                  {topic}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={handleReadmeClick}
-            className="text-sm text-blue-600 hover:underline font-medium"
-          >
-            {isLoading
-              ? "Loading README..."
-              : isExpanded
-                ? "Hide README"
-                : "View README"}
-          </button>
-        </div>
-
-        {isExpanded && (
-          <div className="border-t border-gray-200 bg-gray-50 px-6 py-5">
-            <div
-              className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(readme) }}
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
@@ -534,7 +532,7 @@ export default function App() {
             <div className="flex flex-col md:flex-row md:items-center gap-8">
               <img
                 src="https://github.com/Amuo007/portfolio/blob/main/profile.jpeg?raw=true"
-                alt="Amrinder Singh"
+                alt="Portrait of Amrinder Singh"
                 className="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-blue-600 shadow-md"
               />
 
@@ -636,6 +634,7 @@ export default function App() {
                       <img
                         src={exp.image}
                         alt={exp.company}
+                        loading="lazy"
                         className="w-full md:w-40 h-28 object-cover rounded-xl border border-gray-200"
                       />
                     ) : (
@@ -738,6 +737,22 @@ export default function App() {
                 </div>
               ))}
             </div>
+          ) : repoError ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
+              <p className="text-gray-600 mb-4">
+                Couldn't load repositories from GitHub right now.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent("Projects", "Click", "Retry Repositories");
+                  fetchRepos();
+                }}
+                className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           ) : repos.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
               No repositories found.
@@ -745,7 +760,14 @@ export default function App() {
           ) : (
             <div className="grid md:grid-cols-2 gap-5">
               {repos.map((repo) => (
-                <RepoCard key={repo.id} repo={repo} />
+                <RepoCard
+                  key={repo.id}
+                  repo={repo}
+                  isExpanded={expandedRepo === repo.name}
+                  isLoading={loadingReadme === repo.name}
+                  details={repoDetails[repo.name]}
+                  onToggleReadme={toggleReadme}
+                />
               ))}
             </div>
           )}
@@ -921,7 +943,8 @@ export default function App() {
 
       <footer className="bg-white border-t border-gray-200 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-gray-500">
-          © 2026 Amrinder Singh. Built with React and Tailwind CSS.
+          © {new Date().getFullYear()} Amrinder Singh. Built with React and
+          Tailwind CSS.
         </div>
       </footer>
     </div>
