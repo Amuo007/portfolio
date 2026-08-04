@@ -40,9 +40,28 @@ const LANGUAGE_COLORS = {
 
 const getLanguageColor = (lang) => LANGUAGE_COLORS[lang] || "#8b949e";
 
-const trackEvent = (category, action, name) => {
+const trackEvent = (category, action, name, value) => {
   if (typeof window !== "undefined" && window._paq) {
-    window._paq.push(["trackEvent", category, action, name]);
+    const event = ["trackEvent", category, action, name];
+
+    if (Number.isFinite(value)) {
+      event.push(value);
+    }
+
+    window._paq.push(event);
+  }
+};
+
+const trackLink = (url, label) => {
+  trackEvent("Link", "Outbound Click", label);
+
+  if (
+    typeof window !== "undefined" &&
+    window._paq &&
+    typeof url === "string" &&
+    url.startsWith("http")
+  ) {
+    window._paq.push(["trackLink", url, "link"]);
   }
 };
 
@@ -149,7 +168,7 @@ const renderMarkdown = (md) => {
     )
     .replace(
       MARKDOWN_LINK_REGEX,
-      '<a href="$2" target="_blank" rel="noreferrer" class="text-red-600 hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
     )
     .replace(
       /^\s*[-*] (.+)$/gm,
@@ -227,12 +246,36 @@ const skills = {
   Tools: ["Git", "GitHub", "Docker", "Firebase", "MongoDB", "PostgreSQL"],
 };
 
+const heroHighlights = [
+  {
+    label: "Current",
+    value: "Geometris LP",
+    detail: "Software Engineer Intern",
+  },
+  {
+    label: "Research",
+    value: "RAG search",
+    detail: "Internet-in-a-Box on low-end Android",
+  },
+  {
+    label: "Google PM",
+    value: "4 / 7 modules",
+    detail: "Professional Certificate in progress",
+  },
+];
+
 const certifications = [
   {
     title: "Google Project Management: Professional Certificate",
     issuer: "Google · Coursera",
     inProgress: true,
     logo: "google",
+    progress: {
+      completed: 4,
+      total: 7,
+      label: "4 of 7 modules complete",
+      note: "Module 4 is complete; modules 5, 6, and 7 are left.",
+    },
   },
   {
     title: "Complete Data Science & Machine Learning Bootcamp",
@@ -263,11 +306,11 @@ const certifications = [
 ];
 
 const CONTRIB_COLORS = [
-  "bg-gray-100",
-  "bg-red-200",
-  "bg-red-400",
-  "bg-red-600",
-  "bg-red-800",
+  "bg-slate-100",
+  "bg-blue-100",
+  "bg-blue-300",
+  "bg-blue-500",
+  "bg-blue-700",
 ];
 
 const MONTH_LABELS = [
@@ -368,7 +411,7 @@ const ContributionGraph = () => {
 
   if (!contribData) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 animate-pulse">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8 animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-48 mb-4" />
         <div className="h-24 bg-gray-100 rounded" />
       </div>
@@ -406,13 +449,13 @@ const ContributionGraph = () => {
     <div
       className={`fade-in ${
         play ? "contrib-play" : "contrib-wait"
-      } bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8`}
+      } bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
         <h3 className="text-lg font-bold text-gray-900">GitHub Activity</h3>
 
         <p className="text-sm text-gray-500">
-          <span className="font-semibold text-red-600">
+          <span className="font-semibold text-blue-600">
             <CountUp value={totalLastYear} />
           </span>{" "}
           contributions in the last year
@@ -598,7 +641,7 @@ const LanguageBar = ({ repos }) => {
   if (total === 0) return null;
 
   return (
-    <Reveal className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+    <Reveal className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
         <h3 className="text-lg font-bold text-gray-900">Languages</h3>
 
@@ -706,7 +749,7 @@ const CopyEmailButton = () => {
       className={`press text-xs border rounded-full px-2.5 py-0.5 align-middle ${
         copied
           ? "text-green-600 border-green-300 bg-green-50"
-          : "text-gray-600 border-gray-300 bg-white hover:text-red-700 hover:border-red-300"
+          : "text-gray-600 border-gray-300 bg-white hover:text-blue-700 hover:border-blue-300"
       }`}
     >
       {copied ? "Copied ✓" : "Copy"}
@@ -762,8 +805,8 @@ const NavLink = ({ href, label, active }) => (
     onClick={() => trackEvent("Navigation", "Click", label)}
     aria-current={active ? "true" : undefined}
     className={`nav-link ${
-      active ? "nav-link-active text-red-700" : "text-gray-700"
-    } text-sm font-medium hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
+      active ? "nav-link-active text-blue-700" : "text-gray-700"
+    } flex-none text-sm font-medium hover:text-blue-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
   >
     {label}
   </a>
@@ -772,7 +815,7 @@ const NavLink = ({ href, label, active }) => (
 const SkillTag = ({ skill, index = 0 }) => (
   <span
     style={{ "--stagger-delay": `${Math.min(index * 40, 400)}ms` }}
-    className="stagger-item bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full text-xs font-medium"
+    className="stagger-item bg-white text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-xs font-medium"
   >
     {skill}
   </span>
@@ -784,6 +827,52 @@ const SectionHeading = ({ title, subtitle }) => (
     {subtitle && <p className="text-gray-500 mt-2">{subtitle}</p>}
   </Reveal>
 );
+
+const ProjectOverview = ({ repos, languages }) => {
+  if (repos.length === 0) return null;
+
+  const latestRepo = repos[0];
+
+  const stats = [
+    {
+      label: "Repositories",
+      value: repos.length,
+      detail: "All public non-fork repos",
+    },
+    {
+      label: "Languages",
+      value: languages.length,
+      detail: "Public language mix",
+    },
+    {
+      label: "Newest Update",
+      value: latestRepo ? formatDate(latestRepo.updated_at) : "Live",
+      detail: latestRepo ? latestRepo.name : "Synced from GitHub",
+    },
+  ];
+
+  return (
+    <Reveal className="grid sm:grid-cols-3 gap-3 mb-8">
+      {stats.map((stat, index) => (
+        <div
+          key={stat.label}
+          style={{ "--stagger-delay": `${index * 70}ms` }}
+          className="stagger-item bg-white border border-slate-200 rounded-lg p-4 shadow-sm"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            {stat.label}
+          </p>
+
+          <p className="mt-1 text-2xl font-bold text-slate-950">
+            {stat.value}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">{stat.detail}</p>
+        </div>
+      ))}
+    </Reveal>
+  );
+};
 
 const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
   const readme = details?.readme;
@@ -805,7 +894,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
   };
 
   return (
-    <div className="card-lift h-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="card-lift h-full bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
           <div>
@@ -814,7 +903,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               target="_blank"
               rel="noreferrer"
               onClick={handleRepositoryClick}
-              className="text-xl font-bold text-gray-900 hover:text-red-600"
+              className="text-xl font-bold text-gray-900 hover:text-blue-600"
             >
               {repo.name}
             </a>
@@ -885,7 +974,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <button
           type="button"
           onClick={handleReadmeClick}
-          className="text-sm text-red-600 hover:underline font-medium"
+          className="text-sm text-blue-600 hover:underline font-medium"
         >
           {isLoading
             ? "Loading README..."
@@ -918,9 +1007,95 @@ export default function App() {
   const [activeSection, setActiveSection] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
   const progressRef = useRef(null);
+  const viewedSectionsRef = useRef(new Set());
+  const scrollDepthsRef = useRef(new Set());
+  const sessionStartedAtRef = useRef(Date.now());
 
   useEffect(() => {
     fetchRepos();
+    // Fetch once on mount; manual refreshes go through the Refresh button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    trackEvent("Engagement", "Page Ready", "Portfolio");
+
+    const depthMarks = [25, 50, 75, 90];
+    const trackedDepths = scrollDepthsRef.current;
+    let sessionTimeTracked = false;
+
+    const trackScrollDepth = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+
+      if (max <= 0) return;
+
+      const percent = Math.round((window.scrollY / max) * 100);
+
+      depthMarks.forEach((mark) => {
+        if (percent >= mark && !trackedDepths.has(mark)) {
+          trackedDepths.add(mark);
+          trackEvent("Engagement", "Scroll Depth", `${mark}%`, mark);
+        }
+      });
+    };
+
+    const trackSessionTime = () => {
+      if (sessionTimeTracked) return;
+
+      const seconds = Math.round(
+        (Date.now() - sessionStartedAtRef.current) / 1000
+      );
+
+      if (seconds < 2) return;
+
+      sessionTimeTracked = true;
+      trackEvent("Engagement", "Session Seconds", "Portfolio", seconds);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        trackSessionTime();
+      }
+    };
+
+    const handleLinkClick = (event) => {
+      const link = event.target.closest?.("a[href]");
+
+      if (!link) return;
+
+      const href = link.getAttribute("href");
+
+      if (!href || href.startsWith("#")) return;
+
+      const url = new URL(link.href);
+      const isContactLink = url.protocol === "mailto:" || url.protocol === "tel:";
+      const isOutbound = isContactLink || url.origin !== window.location.origin;
+
+      if (!isOutbound) return;
+
+      const label =
+        link.getAttribute("aria-label") ||
+        link.textContent.trim() ||
+        url.hostname ||
+        href;
+
+      trackLink(link.href, label);
+    };
+
+    trackScrollDepth();
+    window.addEventListener("scroll", trackScrollDepth, { passive: true });
+    window.addEventListener("resize", trackScrollDepth);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("click", handleLinkClick);
+
+    return () => {
+      window.removeEventListener("scroll", trackScrollDepth);
+      window.removeEventListener("resize", trackScrollDepth);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("click", handleLinkClick);
+      trackSessionTime();
+    };
   }, []);
 
   // Header shadow + scroll progress line, updated outside React for smoothness.
@@ -965,6 +1140,11 @@ export default function App() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             inView.add(entry.target.id);
+
+            if (!viewedSectionsRef.current.has(entry.target.id)) {
+              viewedSectionsRef.current.add(entry.target.id);
+              trackEvent("Engagement", "Section View", entry.target.id);
+            }
           } else {
             inView.delete(entry.target.id);
           }
@@ -997,6 +1177,12 @@ export default function App() {
     const cached = readCache(REPO_CACHE_KEY);
 
     if (!force && cached && Date.now() - cached.ts < REPO_CACHE_TTL) {
+      trackEvent(
+        "Projects",
+        "Repositories Cache Hit",
+        "GitHub",
+        cached.repos.length
+      );
       applyRepos(cached.repos);
       setLoadingRepos(false);
       return;
@@ -1019,14 +1205,27 @@ export default function App() {
         .map(slimRepo);
 
       writeCache(REPO_CACHE_KEY, { ts: Date.now(), repos: filtered });
+      trackEvent(
+        "Projects",
+        force ? "Repositories Refreshed" : "Repositories Loaded",
+        "GitHub",
+        filtered.length
+      );
       applyRepos(filtered);
     } catch (err) {
       console.error("Failed to fetch repos:", err);
 
       if (cached && cached.repos && cached.repos.length > 0) {
         // Rate-limited or offline — show the last good data instead of an error.
+        trackEvent(
+          "Projects",
+          "Repositories Cache Fallback",
+          "GitHub",
+          cached.repos.length
+        );
         applyRepos(cached.repos);
       } else {
+        trackEvent("Projects", "Repositories Error", "GitHub");
         setRepoError(true);
       }
     } finally {
@@ -1136,6 +1335,8 @@ export default function App() {
         const text = await res.text();
         const summary = extractSummary(text);
 
+        trackEvent("Projects", "README Loaded", repoName);
+
         setRepoDetails((prev) => ({
           ...prev,
           [repoName]: {
@@ -1145,6 +1346,8 @@ export default function App() {
           },
         }));
       } else {
+        trackEvent("Projects", "README Missing", repoName);
+
         setRepoDetails((prev) => ({
           ...prev,
           [repoName]: {
@@ -1193,13 +1396,13 @@ export default function App() {
       : repos.filter((repo) => repo.language === languageFilter);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 text-gray-900">
       <header
         className={`bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-300 ${
           scrolled ? "shadow-sm" : ""
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-2.5 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
+        <div className="max-w-6xl min-w-0 mx-auto px-4 md:px-6 py-2.5 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
           <a
             href="#home"
             onClick={() => trackEvent("Navigation", "Click", "Home")}
@@ -1208,7 +1411,7 @@ export default function App() {
             Amrinder Singh
           </a>
 
-          <nav className="no-scrollbar flex overflow-x-auto md:overflow-visible -mx-4 px-1.5 md:mx-0 md:px-0 gap-0 md:gap-2">
+          <nav className="flex w-full min-w-0 max-w-full flex-wrap gap-x-2 gap-y-1 px-0 md:w-auto md:flex-nowrap md:gap-2">
             <NavLink
               href="#experience"
               label="Experience"
@@ -1241,21 +1444,25 @@ export default function App() {
       </header>
 
       <main>
-        <section id="home" className="max-w-6xl mx-auto px-6 py-16">
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 md:p-10">
-            <div className="flex flex-col md:flex-row md:items-center gap-8">
+        <section id="home" className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+          <div className="w-full max-w-full overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-10">
+            <div className="flex min-w-0 flex-col md:flex-row md:items-center gap-8">
               <img
                 src={profileImg}
                 alt="Portrait of Amrinder Singh"
-                className="hero-rise w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
+                className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-4 border-blue-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
               />
 
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p
-                  className="hero-rise text-red-600 font-semibold mb-2"
+                  className="hero-rise break-words text-sm font-semibold leading-snug text-blue-600 sm:text-base mb-2"
                   style={{ "--rise-delay": "80ms" }}
                 >
-                  Software Engineer Intern · Computer Science Student
+                  <span>Software Engineer Intern</span>
+                  <span className="hidden sm:inline"> · </span>
+                  <span className="block sm:inline">
+                    Computer Science Student
+                  </span>
                 </p>
 
                 <h1
@@ -1273,7 +1480,7 @@ export default function App() {
                 </p>
 
                 <p
-                  className="hero-rise text-gray-700 leading-relaxed max-w-3xl mb-6"
+                  className="hero-rise max-w-3xl break-words text-gray-700 leading-relaxed mb-6"
                   style={{ "--rise-delay": "320ms" }}
                 >
                   Computer Science student at the University of Houston building
@@ -1283,7 +1490,7 @@ export default function App() {
                 </p>
 
                 <div
-                  className="hero-rise flex flex-wrap items-center gap-3"
+                  className="hero-rise flex max-w-full flex-wrap items-center gap-3"
                   style={{ "--rise-delay": "400ms" }}
                 >
                   <a
@@ -1291,7 +1498,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="press bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium"
+                    className="press w-full bg-blue-600 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-blue-700 font-medium"
                   >
                     View Projects
                   </a>
@@ -1301,7 +1508,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Experience")
                     }
-                    className="press bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50"
+                    className="press w-full bg-white text-center text-gray-900 border border-gray-300 px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-gray-50"
                   >
                     View Experience
                   </a>
@@ -1373,12 +1580,33 @@ export default function App() {
                     </svg>
                   </a>
                 </div>
+
+                <div
+                  className="hero-rise mt-8 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-3"
+                  style={{ "--rise-delay": "480ms" }}
+                >
+                  {heroHighlights.map((item) => (
+                    <div key={item.label}>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        {item.label}
+                      </p>
+
+                      <p className="mt-1 font-semibold text-slate-950">
+                        {item.value}
+                      </p>
+
+                      <p className="mt-1 text-sm leading-snug text-slate-500">
+                        {item.detail}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="experience" className="max-w-6xl mx-auto px-6 py-12">
+        <section id="experience" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <SectionHeading
             title="Experience"
             subtitle="Professional, research, and internship experience."
@@ -1389,7 +1617,7 @@ export default function App() {
               <Reveal
                 key={`${exp.company}-${exp.role}`}
                 delay={Math.min(index * 80, 240)}
-                className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
+                className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
               >
                 <div className="flex flex-col md:flex-row gap-5">
                   <div className="flex-shrink-0">
@@ -1398,10 +1626,10 @@ export default function App() {
                         src={exp.image}
                         alt={exp.company}
                         loading="lazy"
-                        className="w-full md:w-40 h-48 md:h-28 object-cover rounded-xl border border-gray-200"
+                        className="w-full md:w-40 h-48 md:h-28 object-cover rounded-lg border border-gray-200"
                       />
                     ) : (
-                      <div className="w-full md:w-40 h-28 rounded-xl bg-gray-900 text-white flex items-center justify-center">
+                      <div className="w-full md:w-40 h-28 rounded-lg bg-gray-900 text-white flex items-center justify-center">
                         <div
                           className={`w-14 h-14 ${exp.logoColor} rounded-full flex items-center justify-center text-xl font-bold`}
                         >
@@ -1418,7 +1646,7 @@ export default function App() {
                           {exp.role}
                         </h3>
 
-                        <p className="text-red-700 font-semibold">
+                        <p className="text-blue-700 font-semibold">
                           {exp.company} · {exp.type}
                         </p>
 
@@ -1427,7 +1655,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      <span className="text-sm bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full w-fit">
+                      <span className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full w-fit">
                         {exp.dates}
                       </span>
                     </div>
@@ -1435,7 +1663,7 @@ export default function App() {
                     <ul className="space-y-2 text-gray-700 text-sm mb-4">
                       {exp.description.map((item) => (
                         <li key={item} className="flex gap-2">
-                          <span className="text-red-600">•</span>
+                          <span className="text-blue-600">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -1453,10 +1681,10 @@ export default function App() {
           </div>
         </section>
 
-        <section id="projects" className="max-w-6xl mx-auto px-6 py-12">
+        <section id="projects" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <SectionHeading
             title="Projects"
-            subtitle="Public GitHub repositories pulled live from my GitHub profile."
+            subtitle="All public non-fork repositories, sorted by newest update."
           />
 
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -1469,7 +1697,7 @@ export default function App() {
                 onClick={() =>
                   trackEvent("Projects", "Click", "GitHub Username")
                 }
-                className="text-red-600 hover:underline font-medium"
+                className="text-blue-600 hover:underline font-medium"
               >
                 @{GITHUB_USERNAME}
               </a>
@@ -1487,6 +1715,10 @@ export default function App() {
             </button>
           </div>
 
+          {!loadingRepos && !repoError && repos.length > 0 && (
+            <ProjectOverview repos={repos} languages={languages} />
+          )}
+
           <ContributionGraph />
 
           {!loadingRepos && !repoError && repos.length > 0 && (
@@ -1503,8 +1735,8 @@ export default function App() {
                 }}
                 className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                   languageFilter === "All"
-                    ? "bg-red-600 text-white border-red-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:text-blue-700 hover:border-blue-300"
                 }`}
               >
                 All ({repos.length})
@@ -1520,8 +1752,8 @@ export default function App() {
                   }}
                   className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                     languageFilter === language
-                      ? "bg-red-600 text-white border-red-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:text-blue-700 hover:border-blue-300"
                   }`}
                 >
                   {language} ({count})
@@ -1535,7 +1767,7 @@ export default function App() {
               {[1, 2, 3].map((item) => (
                 <div
                   key={item}
-                  className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
+                  className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse"
                 >
                   <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
                   <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
@@ -1544,7 +1776,7 @@ export default function App() {
               ))}
             </div>
           ) : repoError ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
+            <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
               <p className="text-gray-600 mb-4">
                 Couldn't load repositories from GitHub right now.
               </p>
@@ -1560,12 +1792,12 @@ export default function App() {
               </button>
             </div>
           ) : repos.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
+            <div className="bg-white rounded-lg border border-gray-200 p-10 text-center text-gray-500">
               No repositories found.
             </div>
           ) : (
             filteredRepos.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
+              <div className="bg-white rounded-lg border border-gray-200 p-10 text-center text-gray-500">
                 No repositories match this filter.
               </div>
             ) : (
@@ -1590,13 +1822,13 @@ export default function App() {
           )}
         </section>
 
-        <section id="skills" className="max-w-6xl mx-auto px-6 py-12">
+        <section id="skills" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <SectionHeading
             title="Skills"
             subtitle="Technologies I use across software, web, mobile, AI, and AR development."
           />
 
-          <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
+          <Reveal className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-6">
               {Object.entries(skills).map(([category, skillList]) => (
                 <div key={category}>
@@ -1615,14 +1847,14 @@ export default function App() {
           </Reveal>
         </section>
 
-        <section id="education" className="max-w-6xl mx-auto px-6 py-12">
+        <section id="education" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <SectionHeading
             title="Education & Certifications"
             subtitle="Academic background and software-related training."
           />
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+            <Reveal className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
               <h3 className="text-xl font-bold text-gray-900">
                 University of Houston
               </h3>
@@ -1644,7 +1876,7 @@ export default function App() {
 
             <Reveal
               delay={100}
-              className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
+              className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
             >
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 Certifications
@@ -1656,7 +1888,7 @@ export default function App() {
                     key={cert.title}
                     style={{ "--stagger-delay": `${Math.min(index * 70, 420)}ms` }}
                     className={`stagger-item border-l-4 pl-4 ${
-                      cert.inProgress ? "border-blue-500" : "border-red-500"
+                      cert.inProgress ? "border-blue-500" : "border-slate-300"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -1679,6 +1911,45 @@ export default function App() {
                       </span>
                     )}
 
+                    {cert.progress && (
+                      <div className="mt-3 max-w-md">
+                        <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-600 mb-1.5">
+                          <span>{cert.progress.label}</span>
+                          <span>
+                            {Math.round(
+                              (cert.progress.completed / cert.progress.total) *
+                                100
+                            )}
+                            %
+                          </span>
+                        </div>
+
+                        <div
+                          className="h-2 rounded-full bg-slate-100 overflow-hidden"
+                          aria-label={`${cert.progress.completed} of ${cert.progress.total} modules complete`}
+                          aria-valuemax={cert.progress.total}
+                          aria-valuemin="0"
+                          aria-valuenow={cert.progress.completed}
+                          role="progressbar"
+                        >
+                          <div
+                            className="h-full rounded-full bg-blue-600"
+                            style={{
+                              width: `${
+                                (cert.progress.completed /
+                                  cert.progress.total) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                          {cert.progress.note}
+                        </p>
+                      </div>
+                    )}
+
                     {cert.credentialId && (
                       <p className="text-sm text-gray-500">
                         Credential ID: {cert.credentialId}
@@ -1691,13 +1962,13 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" className="max-w-6xl mx-auto px-6 py-12 pb-20">
+        <section id="contact" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 pb-20">
           <SectionHeading
             title="Contact"
             subtitle="Open to software engineering internships, research, and collaboration."
           />
 
-          <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
+          <Reveal className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
@@ -1720,7 +1991,7 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="text-red-600 hover:underline break-all"
+                      className="text-blue-600 hover:underline break-all"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
@@ -1728,7 +1999,16 @@ export default function App() {
                   </p>
 
                   <p>
-                    <strong>Phone:</strong> (832) 263-4489
+                    <strong>Phone:</strong>{" "}
+                    <a
+                      href="tel:+18322634489"
+                      onClick={() =>
+                        trackEvent("Contact", "Click", "Phone Number")
+                      }
+                      className="text-blue-600 hover:underline"
+                    >
+                      (832) 263-4489
+                    </a>
                   </p>
                 </div>
               </div>
@@ -1746,7 +2026,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact GitHub")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-blue-600 hover:underline"
                   >
                     GitHub
                   </a>
@@ -1758,7 +2038,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-blue-600 hover:underline"
                   >
                     LinkedIn
                   </a>
@@ -1768,7 +2048,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Email Me Link")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-blue-600 hover:underline"
                   >
                     Email Me
                   </a>
@@ -1782,7 +2062,7 @@ export default function App() {
       <BackToTop />
 
       <footer className="bg-white border-t border-gray-200 py-6">
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-gray-500">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center text-sm text-gray-500">
           © {new Date().getFullYear()} Amrinder Singh. Built with React and
           Tailwind CSS.
         </div>
