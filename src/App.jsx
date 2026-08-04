@@ -1948,18 +1948,13 @@ export default function App() {
               <div className="mt-6 border-t border-gray-200 pt-5">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <h4 className="font-bold text-gray-900">
-                    Software Engineering Capstone
+                    Capstone in Software Design
                   </h4>
 
                   <span className="text-sm font-medium text-emerald-700">
                     Completed
                   </span>
                 </div>
-
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                  Completed the software engineering foundation and both courses
-                  in UH&apos;s Software Senior Sequence.
-                </p>
 
                 <div className="mt-4 divide-y divide-gray-200 border-y border-gray-200">
                   {softwareEngineeringSequence.map((course) => (
