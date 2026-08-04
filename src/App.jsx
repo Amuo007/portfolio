@@ -305,6 +305,30 @@ const certifications = [
   },
 ];
 
+const softwareEngineeringSequence = [
+  {
+    code: "COSC 4351",
+    title: "Fundamentals of Software Engineering",
+    stage: "Engineering foundation",
+    summary:
+      "Built a full-lifecycle foundation in requirements, planning, implementation, quality assurance, and maintainable software.",
+  },
+  {
+    code: "COSC 4353",
+    title: "Software Design",
+    stage: "Capstone I",
+    summary:
+      "Turned requirements into resilient object-oriented designs using architecture, modeling, patterns, metrics, testing, and refactoring.",
+  },
+  {
+    code: "COSC 4354",
+    title: "Software Development Practices",
+    stage: "Capstone II",
+    summary:
+      "Delivered team software through agile iterations, estimation, risk management, automated testing, modern tooling, and deployment.",
+  },
+];
+
 const CONTRIB_COLORS = [
   "bg-slate-100",
   "bg-blue-100",
@@ -1853,6 +1877,62 @@ export default function App() {
             subtitle="Academic background and software-related training."
           />
 
+          <Reveal className="mb-6 bg-slate-950 text-white rounded-lg shadow-sm overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 p-6 md:p-8 border-b border-white/10">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-300">
+                  UH Software Engineering Milestone
+                </p>
+
+                <h3 className="mt-2 text-2xl font-bold">
+                  Software Senior Sequence completed
+                </h3>
+
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  Completed the software engineering foundation and both courses
+                  in the University of Houston&apos;s Software Senior Sequence
+                  capstone pathway.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start md:self-auto text-sm font-semibold text-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                All three courses completed
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-3">
+              {softwareEngineeringSequence.map((course, index) => (
+                <div
+                  key={course.code}
+                  className={`p-6 md:p-8 ${
+                    index === 0
+                      ? ""
+                      : "border-t lg:border-t-0 lg:border-l border-white/10"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold text-blue-300">
+                      {course.code}
+                    </span>
+
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {course.stage}
+                    </span>
+                  </div>
+
+                  <h4 className="mt-3 text-base font-bold text-white">
+                    {course.title}
+                  </h4>
+
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    {course.summary}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
           <div className="grid lg:grid-cols-2 gap-6">
             <Reveal className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
               <h3 className="text-xl font-bold text-gray-900">
@@ -1868,9 +1948,8 @@ export default function App() {
               </p>
 
               <p className="text-gray-700 text-sm mt-4 leading-relaxed">
-                Relevant coursework includes Data Structures & Algorithms,
-                Operating Systems, Database Systems, Software Engineering,
-                Software Design, and Computer Networking.
+                Additional coursework includes Data Structures & Algorithms,
+                Operating Systems, Database Systems, and Computer Networking.
               </p>
             </Reveal>
 
