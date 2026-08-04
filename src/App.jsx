@@ -40,6 +40,44 @@ const trackEvent = (category, action, name) => {
   }
 };
 
+// The GitHub API allows only 60 unauthenticated requests per hour per IP,
+// so responses are cached in localStorage and reused as a fallback whenever
+// the API rate-limits us. Caching is best-effort (private mode, quota).
+const REPO_CACHE_KEY = "gh-repos-v1";
+const README_CACHE_KEY = "gh-readme-summaries-v1";
+const REPO_CACHE_TTL = 30 * 60 * 1000;
+const README_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+const readCache = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage unavailable or full — skip caching.
+  }
+};
+
+// Keep only the fields the UI renders so the cache stays small.
+const slimRepo = (repo) => ({
+  id: repo.id,
+  name: repo.name,
+  html_url: repo.html_url,
+  description: repo.description,
+  language: repo.language,
+  updated_at: repo.updated_at,
+  stargazers_count: repo.stargazers_count,
+  forks_count: repo.forks_count,
+  topics: repo.topics,
+});
+
 const extractSummary = (md) => {
   if (!md) return null;
 
@@ -240,6 +278,47 @@ const MONTH_LABELS = [
 const ContributionGraph = () => {
   const [contribData, setContribData] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [play, setPlay] = useState(false);
+  const scrollerRef = useRef(null);
+
+  // Start with the most recent months in view on narrow screens,
+  // then pop the cells in once the graph is actually on screen.
+  useEffect(() => {
+    if (!contribData) return undefined;
+
+    const scroller = scrollerRef.current;
+
+    if (scroller) {
+      scroller.scrollLeft = scroller.scrollWidth;
+    }
+
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (
+      reduceMotion ||
+      typeof IntersectionObserver === "undefined" ||
+      !scroller
+    ) {
+      setPlay(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setPlay(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(scroller);
+
+    return () => observer.disconnect();
+  }, [contribData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -314,19 +393,23 @@ const ContributionGraph = () => {
   });
 
   return (
-    <div className="fade-in bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+    <div
+      className={`fade-in ${
+        play ? "contrib-play" : "contrib-wait"
+      } bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
         <h3 className="text-lg font-bold text-gray-900">GitHub Activity</h3>
 
         <p className="text-sm text-gray-500">
           <span className="font-semibold text-red-600">
-            {totalLastYear.toLocaleString()}
+            <CountUp value={totalLastYear} />
           </span>{" "}
           contributions in the last year
         </p>
       </div>
 
-      <div className="overflow-x-auto no-scrollbar">
+      <div ref={scrollerRef} className="overflow-x-auto no-scrollbar">
         <div className="inline-block">
           <div className="flex gap-[3px] ml-8 mb-1">
             {monthOfWeek.map((month, i) => (
@@ -366,7 +449,10 @@ const ContributionGraph = () => {
                         title={`${day.count} contribution${
                           day.count === 1 ? "" : "s"
                         } on ${day.date}`}
-                        className={`w-2.5 h-2.5 rounded-[2px] ${
+                        style={{
+                          "--cell-delay": `${wi * 14 + di * 26}ms`,
+                        }}
+                        className={`contrib-cell w-2.5 h-2.5 rounded-[2px] ${
                           CONTRIB_COLORS[day.level] || CONTRIB_COLORS[0]
                         }`}
                       />
@@ -432,25 +518,83 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
   );
 };
 
-const NavLink = ({ href, label }) => (
+// Counts up from 0 once the number scrolls into view.
+const CountUp = ({ value, duration = 1200 }) => {
+  const ref = useRef(null);
+  const started = useRef(false);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+
+    if (!el) return undefined;
+
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion || typeof IntersectionObserver === "undefined") {
+      setDisplay(value);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        if (started.current) return;
+
+        started.current = true;
+        observer.disconnect();
+
+        const startTime = performance.now();
+
+        const tick = (now) => {
+          const t = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+
+          setDisplay(Math.round(eased * value));
+
+          if (t < 1) requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [value, duration]);
+
+  return <span ref={ref}>{display.toLocaleString()}</span>;
+};
+
+const NavLink = ({ href, label, active }) => (
   <a
     href={href}
     onClick={() => trackEvent("Navigation", "Click", label)}
-    className="nav-link text-sm font-medium text-gray-700 hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap"
+    aria-current={active ? "true" : undefined}
+    className={`nav-link ${
+      active ? "nav-link-active text-red-700" : "text-gray-700"
+    } text-sm font-medium hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
   >
     {label}
   </a>
 );
 
-const SkillTag = ({ skill }) => (
-  <span className="bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full text-xs font-medium">
+const SkillTag = ({ skill, index = 0 }) => (
+  <span
+    style={{ "--stagger-delay": `${Math.min(index * 40, 400)}ms` }}
+    className="stagger-item bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full text-xs font-medium"
+  >
     {skill}
   </span>
 );
 
 const SectionHeading = ({ title, subtitle }) => (
   <Reveal className="mb-8">
-    <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
+    <h2 className="heading-accent text-3xl font-bold text-gray-900">{title}</h2>
     {subtitle && <p className="text-gray-500 mt-2">{subtitle}</p>}
   </Reveal>
 );
@@ -475,7 +619,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
   };
 
   return (
-    <div className="card-lift bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="card-lift h-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
           <div>
@@ -584,14 +728,92 @@ export default function App() {
   const [repoError, setRepoError] = useState(false);
   const [expandedRepo, setExpandedRepo] = useState(null);
   const [loadingReadme, setLoadingReadme] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+  const progressRef = useRef(null);
 
   useEffect(() => {
     fetchRepos();
   }, []);
 
-  const fetchRepos = async () => {
+  // Header shadow + scroll progress line, updated outside React for smoothness.
+  useEffect(() => {
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${progress})`;
+      }
+
+      setScrolled(window.scrollY > 8);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  // Highlight the nav link of the section crossing the middle of the screen.
+  useEffect(() => {
+    const ids = ["experience", "projects", "skills", "education", "contact"];
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
+    if (typeof IntersectionObserver === "undefined" || sections.length === 0) {
+      return undefined;
+    }
+
+    const inView = new Set();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            inView.add(entry.target.id);
+          } else {
+            inView.delete(entry.target.id);
+          }
+        });
+
+        setActiveSection(ids.find((id) => inView.has(id)) || "");
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const applyRepos = (list) => {
+    setRepos(list);
+
+    list.forEach((repo) => {
+      if (!repo.description) {
+        fetchReadmeSummary(repo.name);
+      }
+    });
+  };
+
+  const fetchRepos = async (force = false) => {
     setLoadingRepos(true);
     setRepoError(false);
+
+    const cached = readCache(REPO_CACHE_KEY);
+
+    if (!force && cached && Date.now() - cached.ts < REPO_CACHE_TTL) {
+      applyRepos(cached.repos);
+      setLoadingRepos(false);
+      return;
+    }
 
     try {
       const res = await fetch(
@@ -606,24 +828,57 @@ export default function App() {
 
       const filtered = data
         .filter((repo) => !repo.fork && !EXCLUDED_REPOS.includes(repo.name))
-        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+        .map(slimRepo);
 
-      setRepos(filtered);
-
-      filtered.forEach((repo) => {
-        if (!repo.description) {
-          fetchReadmeSummary(repo.name);
-        }
-      });
+      writeCache(REPO_CACHE_KEY, { ts: Date.now(), repos: filtered });
+      applyRepos(filtered);
     } catch (err) {
       console.error("Failed to fetch repos:", err);
-      setRepoError(true);
+
+      if (cached && cached.repos && cached.repos.length > 0) {
+        // Rate-limited or offline — show the last good data instead of an error.
+        applyRepos(cached.repos);
+      } else {
+        setRepoError(true);
+      }
     } finally {
       setLoadingRepos(false);
     }
   };
 
   const fetchReadmeSummary = async (repoName) => {
+    const cache = readCache(README_CACHE_KEY);
+
+    if (
+      cache &&
+      cache.items &&
+      cache.items[repoName] !== undefined &&
+      Date.now() - cache.ts < README_CACHE_TTL
+    ) {
+      const summary = cache.items[repoName];
+
+      setRepoDetails((prev) => ({
+        ...prev,
+        [repoName]: {
+          ...prev[repoName],
+          summary,
+        },
+      }));
+
+      return;
+    }
+
+    const saveSummary = (summary) => {
+      const current = readCache(README_CACHE_KEY) || {
+        ts: Date.now(),
+        items: {},
+      };
+
+      current.items[repoName] = summary;
+      writeCache(README_CACHE_KEY, current);
+    };
+
     try {
       const res = await fetch(
         `https://api.github.com/repos/${GITHUB_USERNAME}/${repoName}/readme`,
@@ -638,12 +893,25 @@ export default function App() {
         const text = await res.text();
         const summary = extractSummary(text);
 
+        saveSummary(summary);
+
         setRepoDetails((prev) => ({
           ...prev,
           [repoName]: {
             ...prev[repoName],
             readme: text,
             summary,
+          },
+        }));
+      } else if (res.status === 404) {
+        saveSummary(null);
+
+        setRepoDetails((prev) => ({
+          ...prev,
+          [repoName]: {
+            ...prev[repoName],
+            readme: null,
+            summary: null,
           },
         }));
       }
@@ -724,7 +992,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30">
+      <header
+        className={`bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-300 ${
+          scrolled ? "shadow-sm" : ""
+        }`}
+      >
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-2.5 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
           <a
             href="#home"
@@ -735,13 +1007,35 @@ export default function App() {
           </a>
 
           <nav className="no-scrollbar flex overflow-x-auto md:overflow-visible -mx-4 px-1.5 md:mx-0 md:px-0 gap-0 md:gap-2">
-            <NavLink href="#experience" label="Experience" />
-            <NavLink href="#projects" label="Projects" />
-            <NavLink href="#skills" label="Skills" />
-            <NavLink href="#education" label="Education" />
-            <NavLink href="#contact" label="Contact" />
+            <NavLink
+              href="#experience"
+              label="Experience"
+              active={activeSection === "experience"}
+            />
+            <NavLink
+              href="#projects"
+              label="Projects"
+              active={activeSection === "projects"}
+            />
+            <NavLink
+              href="#skills"
+              label="Skills"
+              active={activeSection === "skills"}
+            />
+            <NavLink
+              href="#education"
+              label="Education"
+              active={activeSection === "education"}
+            />
+            <NavLink
+              href="#contact"
+              label="Contact"
+              active={activeSection === "contact"}
+            />
           </nav>
         </div>
+
+        <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
       </header>
 
       <main>
@@ -946,8 +1240,8 @@ export default function App() {
                     </ul>
 
                     <div className="flex flex-wrap gap-2">
-                      {exp.skills.map((skill) => (
-                        <SkillTag key={skill} skill={skill} />
+                      {exp.skills.map((skill, skillIndex) => (
+                        <SkillTag key={skill} skill={skill} index={skillIndex} />
                       ))}
                     </div>
                   </div>
@@ -983,7 +1277,7 @@ export default function App() {
               type="button"
               onClick={() => {
                 trackEvent("Projects", "Click", "Refresh Repositories");
-                fetchRepos();
+                fetchRepos(true);
               }}
               className="press text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
             >
@@ -1015,7 +1309,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   trackEvent("Projects", "Click", "Retry Repositories");
-                  fetchRepos();
+                  fetchRepos(true);
                 }}
                 className="press text-sm bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800"
               >
@@ -1027,16 +1321,21 @@ export default function App() {
               No repositories found.
             </div>
           ) : (
-            <div className="fade-in grid md:grid-cols-2 gap-5">
-              {repos.map((repo) => (
-                <RepoCard
+            <div className="grid md:grid-cols-2 gap-5">
+              {repos.map((repo, index) => (
+                <Reveal
                   key={repo.id}
-                  repo={repo}
-                  isExpanded={expandedRepo === repo.name}
-                  isLoading={loadingReadme === repo.name}
-                  details={repoDetails[repo.name]}
-                  onToggleReadme={toggleReadme}
-                />
+                  delay={(index % 2) * 70}
+                  className="h-full"
+                >
+                  <RepoCard
+                    repo={repo}
+                    isExpanded={expandedRepo === repo.name}
+                    isLoading={loadingReadme === repo.name}
+                    details={repoDetails[repo.name]}
+                    onToggleReadme={toggleReadme}
+                  />
+                </Reveal>
               ))}
             </div>
           )}
@@ -1057,8 +1356,8 @@ export default function App() {
                   </h3>
 
                   <div className="flex flex-wrap gap-2">
-                    {skillList.map((skill) => (
-                      <SkillTag key={skill} skill={skill} />
+                    {skillList.map((skill, skillIndex) => (
+                      <SkillTag key={skill} skill={skill} index={skillIndex} />
                     ))}
                   </div>
                 </div>

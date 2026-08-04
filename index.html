@@ -169,6 +169,57 @@
         transform: scaleX(1);
       }
 
+      /* Active nav link keeps its underline */
+      .nav-link-active::after {
+        transform: scaleX(1);
+      }
+
+      /* Thin scroll progress line at the bottom edge of the header */
+      .scroll-progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: #dc2626;
+        transform: scaleX(0);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+
+      /* Staggered child items inside reveal containers */
+      .reveal .stagger-item {
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.5s var(--ease-out-soft),
+          transform 0.5s var(--ease-out-soft);
+        transition-delay: var(--stagger-delay, 0ms);
+      }
+
+      .reveal.is-visible .stagger-item {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Section heading accent line grows in on reveal */
+      .heading-accent::after {
+        content: "";
+        display: block;
+        width: 2.75rem;
+        height: 3px;
+        margin-top: 0.625rem;
+        border-radius: 9999px;
+        background: #dc2626;
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 0.7s var(--ease-out-soft) 0.2s;
+      }
+
+      .reveal.is-visible .heading-accent::after {
+        transform: scaleX(1);
+      }
+
       /* Smooth README expand */
       @keyframes panel-in {
         from {
@@ -183,6 +234,31 @@
 
       .panel-in {
         animation: panel-in 0.45s var(--ease-out-soft) both;
+      }
+
+      /* Contribution cells pop in one by one, sweeping across the graph */
+      @keyframes cell-pop {
+        0% {
+          opacity: 0;
+          transform: scale(0.4);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .contrib-wait .contrib-cell {
+        opacity: 0;
+      }
+
+      .contrib-play .contrib-cell {
+        animation: cell-pop 0.45s var(--ease-out-soft) both;
+        animation-delay: var(--cell-delay, 0ms);
       }
 
       /* Soft fade for async content (repos, contribution graph) */
@@ -204,11 +280,19 @@
         .reveal,
         .hero-rise,
         .panel-in,
-        .fade-in {
+        .fade-in,
+        .reveal .stagger-item,
+        .contrib-wait .contrib-cell,
+        .contrib-play .contrib-cell {
           opacity: 1 !important;
           transform: none !important;
           transition: none !important;
           animation: none !important;
+        }
+
+        .heading-accent::after {
+          transform: none !important;
+          transition: none !important;
         }
       }
 
@@ -220,11 +304,19 @@
         .reveal,
         .hero-rise,
         .panel-in,
-        .fade-in {
+        .fade-in,
+        .reveal .stagger-item,
+        .contrib-wait .contrib-cell,
+        .contrib-play .contrib-cell {
           opacity: 1 !important;
           transform: none !important;
           transition: none !important;
           animation: none !important;
+        }
+
+        .heading-accent::after {
+          transform: none !important;
+          transition: none !important;
         }
 
         .card-lift,
