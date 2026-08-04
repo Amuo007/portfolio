@@ -316,21 +316,21 @@ const softwareEngineeringSequence = [
     title: "Fundamentals of Software Engineering",
     stage: "Engineering foundation",
     summary:
-      "Built a full-lifecycle foundation in requirements, planning, implementation, quality assurance, and maintainable software.",
+      "Software lifecycle, requirements, planning, quality assurance, and maintenance.",
   },
   {
     code: "COSC 4353",
     title: "Software Design",
     stage: "Capstone I",
     summary:
-      "Turned requirements into resilient object-oriented designs using architecture, modeling, patterns, metrics, testing, and refactoring.",
+      "Object-oriented design, architecture, modeling, patterns, testing, and refactoring.",
   },
   {
     code: "COSC 4354",
     title: "Software Development Practices",
     stage: "Capstone II",
     summary:
-      "Delivered team software through agile iterations, estimation, risk management, automated testing, modern tooling, and deployment.",
+      "Agile team delivery, estimation, risk management, automated testing, and deployment.",
   },
 ];
 
@@ -1913,80 +1913,78 @@ export default function App() {
             subtitle="Academic background and software-related training."
           />
 
-          <Reveal className="mb-6 bg-slate-950 text-white rounded-lg shadow-sm overflow-hidden">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 p-6 md:p-8 border-b border-white/10">
-              <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-300">
-                  UH Software Engineering Milestone
-                </p>
-
-                <h3 className="mt-2 text-2xl font-bold">
-                  Software Senior Sequence completed
-                </h3>
-
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  Completed the software engineering foundation and both courses
-                  in the University of Houston&apos;s Software Senior Sequence
-                  capstone pathway.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 self-start md:self-auto text-sm font-semibold text-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                All three courses completed
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-3">
-              {softwareEngineeringSequence.map((course, index) => (
-                <div
-                  key={course.code}
-                  className={`p-6 md:p-8 ${
-                    index === 0
-                      ? ""
-                      : "border-t lg:border-t-0 lg:border-l border-white/10"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-red-300">
-                      {course.code}
-                    </span>
-
-                    <span className="text-[11px] font-medium text-slate-400">
-                      {course.stage}
-                    </span>
-                  </div>
-
-                  <h4 className="mt-3 text-base font-bold text-white">
-                    {course.title}
-                  </h4>
-
-                  <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                    {course.summary}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-
           <div className="grid lg:grid-cols-2 gap-6">
             <Reveal className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-              <h3 className="text-xl font-bold text-gray-900">
-                University of Houston
-              </h3>
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden">
+                  <img
+                    src="https://www.uh.edu/brand/_img/uh-interlock-logo.png"
+                    alt="University of Houston interlocking UH logo"
+                    className="h-14 w-14 scale-[1.9] object-contain"
+                    loading="lazy"
+                  />
+                </div>
 
-              <p className="text-gray-700 mt-1">
-                Bachelor of Science in Computer Science
-              </p>
+                <div className="min-w-0">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    University of Houston
+                  </h3>
 
-              <p className="text-gray-500 mt-1">
-                Expected Graduation: December 2026
-              </p>
+                  <p className="mt-1 text-gray-700">
+                    Bachelor of Science in Computer Science
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Expected Graduation: December 2026
+                  </p>
+                </div>
+              </div>
 
               <p className="text-gray-700 text-sm mt-4 leading-relaxed">
                 Additional coursework includes Data Structures & Algorithms,
                 Operating Systems, Database Systems, and Computer Networking.
               </p>
+
+              <div className="mt-6 border-t border-gray-200 pt-5">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <h4 className="font-bold text-gray-900">
+                    Software Engineering Capstone
+                  </h4>
+
+                  <span className="text-sm font-medium text-emerald-700">
+                    Completed
+                  </span>
+                </div>
+
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  Completed the software engineering foundation and both courses
+                  in UH&apos;s Software Senior Sequence.
+                </p>
+
+                <div className="mt-4 divide-y divide-gray-200 border-y border-gray-200">
+                  {softwareEngineeringSequence.map((course) => (
+                    <div key={course.code} className="py-4">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                        <span className="text-xs font-semibold text-red-700">
+                          {course.code}
+                        </span>
+
+                        <span className="text-xs text-gray-500">
+                          {course.stage}
+                        </span>
+                      </div>
+
+                      <p className="mt-1 font-semibold text-gray-900">
+                        {course.title}
+                      </p>
+
+                      <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                        {course.summary}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </Reveal>
 
             <Reveal
