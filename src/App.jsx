@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const GITHUB_USERNAME = "Amuo007";
 const EXCLUDED_REPOS = [];
@@ -192,7 +192,7 @@ const certifications = [
     issued: "Jan 2022",
   },
   {
-    title: "Tensorflow 2: Deep Learning & Artificial Intelligence",
+    title: "TensorFlow 2: Deep Learning & Artificial Intelligence",
     issuer: "Udemy",
     issued: "May 2024",
   },
@@ -314,7 +314,7 @@ const ContributionGraph = () => {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+    <div className="fade-in bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
         <h3 className="text-lg font-bold text-gray-900">GitHub Activity</h3>
 
@@ -390,11 +390,53 @@ const ContributionGraph = () => {
   );
 };
 
+// Fades content in as it scrolls into view. Falls back to visible
+// when IntersectionObserver isn't available.
+const Reveal = ({ children, delay = 0, className = "" }) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+
+    if (!el) return undefined;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -32px 0px" }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{ "--reveal-delay": `${delay}ms` }}
+      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 const NavLink = ({ href, label }) => (
   <a
     href={href}
     onClick={() => trackEvent("Navigation", "Click", label)}
-    className="text-sm font-medium text-gray-700 hover:text-red-600 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap"
+    className="nav-link text-sm font-medium text-gray-700 hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap"
   >
     {label}
   </a>
@@ -407,10 +449,10 @@ const SkillTag = ({ skill }) => (
 );
 
 const SectionHeading = ({ title, subtitle }) => (
-  <div className="mb-8">
+  <Reveal className="mb-8">
     <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
     {subtitle && <p className="text-gray-500 mt-2">{subtitle}</p>}
-  </div>
+  </Reveal>
 );
 
 const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
@@ -433,7 +475,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+    <div className="card-lift bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
           <div>
@@ -477,7 +519,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
             target="_blank"
             rel="noreferrer"
             onClick={handleRepositoryClick}
-            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="press text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800"
           >
             GitHub
           </a>
@@ -524,7 +566,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
       </div>
 
       {isExpanded && (
-        <div className="border-t border-gray-200 bg-gray-50 px-6 py-5">
+        <div className="panel-in border-t border-gray-200 bg-gray-50 px-6 py-5">
           <div
             className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(readme) }}
@@ -682,7 +724,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <header className="bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-2.5 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-4">
           <a
             href="#home"
@@ -709,36 +751,51 @@ export default function App() {
               <img
                 src="https://github.com/Amuo007/portfolio/blob/main/profile.jpeg?raw=true"
                 alt="Portrait of Amrinder Singh"
-                className="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md"
+                className="hero-rise w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
               />
 
               <div className="flex-1">
-                <p className="text-red-600 font-semibold mb-2">
+                <p
+                  className="hero-rise text-red-600 font-semibold mb-2"
+                  style={{ "--rise-delay": "80ms" }}
+                >
                   Software Engineer Intern · Computer Science Student
                 </p>
 
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+                <h1
+                  className="hero-rise text-4xl md:text-5xl font-bold text-gray-900 mb-3"
+                  style={{ "--rise-delay": "160ms" }}
+                >
                   Amrinder Singh
                 </h1>
 
-                <p className="text-xl text-gray-600 mb-4">
+                <p
+                  className="hero-rise text-xl text-gray-600 mb-4"
+                  style={{ "--rise-delay": "240ms" }}
+                >
                   Full-Stack, AI, and AR Developer
                 </p>
 
-                <p className="text-gray-700 leading-relaxed max-w-3xl mb-6">
+                <p
+                  className="hero-rise text-gray-700 leading-relaxed max-w-3xl mb-6"
+                  style={{ "--rise-delay": "320ms" }}
+                >
                   Computer Science student at the University of Houston building
                   full-stack, AI, and AR applications. Currently working as a
                   Software Engineer Intern at Geometris LP. Previously researched
                   offline search using embeddings and RAG for Internet-in-a-Box.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div
+                  className="hero-rise flex flex-wrap items-center gap-3"
+                  style={{ "--rise-delay": "400ms" }}
+                >
                   <a
                     href="#projects"
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    className="press bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium"
                   >
                     View Projects
                   </a>
@@ -748,7 +805,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Experience")
                     }
-                    className="bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="press bg-white text-gray-900 border border-gray-300 px-5 py-2.5 rounded-lg hover:bg-gray-50"
                   >
                     View Experience
                   </a>
@@ -762,7 +819,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "GitHub Profile")
                     }
-                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    className="press bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900"
                   >
                     <svg
                       className="w-5 h-5"
@@ -783,7 +840,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "LinkedIn Profile")
                     }
-                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    className="press bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900"
                   >
                     <svg
                       className="w-5 h-5"
@@ -802,7 +859,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Hero Email")
                     }
-                    className="bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    className="press bg-white text-gray-700 border border-gray-300 p-2.5 rounded-lg hover:bg-gray-50 hover:text-gray-900"
                   >
                     <svg
                       className="w-5 h-5"
@@ -832,9 +889,10 @@ export default function App() {
           />
 
           <div className="space-y-6">
-            {experiences.map((exp) => (
-              <div
+            {experiences.map((exp, index) => (
+              <Reveal
                 key={`${exp.company}-${exp.role}`}
+                delay={Math.min(index * 80, 240)}
                 className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
               >
                 <div className="flex flex-col md:flex-row gap-5">
@@ -894,7 +952,7 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
@@ -927,7 +985,7 @@ export default function App() {
                 trackEvent("Projects", "Click", "Refresh Repositories");
                 fetchRepos();
               }}
-              className="text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
+              className="press text-sm bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Refresh
             </button>
@@ -959,7 +1017,7 @@ export default function App() {
                   trackEvent("Projects", "Click", "Retry Repositories");
                   fetchRepos();
                 }}
-                className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+                className="press text-sm bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800"
               >
                 Try Again
               </button>
@@ -969,7 +1027,7 @@ export default function App() {
               No repositories found.
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="fade-in grid md:grid-cols-2 gap-5">
               {repos.map((repo) => (
                 <RepoCard
                   key={repo.id}
@@ -990,7 +1048,7 @@ export default function App() {
             subtitle="Technologies I use across software, web, mobile, AI, and AR development."
           />
 
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
+          <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-6">
               {Object.entries(skills).map(([category, skillList]) => (
                 <div key={category}>
@@ -1006,7 +1064,7 @@ export default function App() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
 
         <section id="education" className="max-w-6xl mx-auto px-6 py-12">
@@ -1016,7 +1074,7 @@ export default function App() {
           />
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+            <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-bold text-gray-900">
                 University of Houston
               </h3>
@@ -1034,9 +1092,12 @@ export default function App() {
                 Operating Systems, Database Systems, Software Engineering,
                 Software Design, and Computer Networking.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+            <Reveal
+              delay={100}
+              className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
+            >
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 Certifications
               </h3>
@@ -1061,7 +1122,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -1071,7 +1132,7 @@ export default function App() {
             subtitle="Open to software engineering internships, research, and collaboration."
           />
 
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
+          <Reveal className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
@@ -1148,7 +1209,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 

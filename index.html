@@ -71,6 +71,168 @@
       section[id] {
         scroll-margin-top: 5.5rem;
       }
+
+      /* ---- Motion ---- */
+      :root {
+        --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      /* Scroll-triggered reveal */
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.7s var(--ease-out-soft),
+          transform 0.7s var(--ease-out-soft);
+        transition-delay: var(--reveal-delay, 0ms);
+      }
+
+      .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* One-time entrance for the hero */
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* "backwards" (not "both") so the finished animation releases the
+         transform back to author styles — keeps the hover scale working. */
+      .hero-rise {
+        animation: rise-in 0.8s var(--ease-out-soft) backwards;
+        animation-delay: var(--rise-delay, 0ms);
+      }
+
+      /* Gentle lift on hover for cards */
+      .card-lift {
+        transition:
+          transform 0.4s var(--ease-out-soft),
+          box-shadow 0.4s var(--ease-out-soft);
+      }
+
+      @media (hover: hover) {
+        .card-lift:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 14px 30px -14px rgba(17, 24, 39, 0.14);
+        }
+      }
+
+      /* Subtle press feedback on buttons and links */
+      .press {
+        transition:
+          transform 0.2s var(--ease-out-soft),
+          background-color 0.2s ease,
+          color 0.2s ease,
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .press:active {
+        transform: scale(0.97);
+      }
+
+      /* Nav link underline that grows from the center */
+      .nav-link {
+        position: relative;
+      }
+
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        left: 0.625rem;
+        right: 0.625rem;
+        bottom: 0.25rem;
+        height: 2px;
+        border-radius: 9999px;
+        background: #b91c1c;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.35s var(--ease-out-soft);
+      }
+
+      /* Hover-gated so tapped links don't keep a stale underline on touch */
+      @media (hover: hover) {
+        .nav-link:hover::after {
+          transform: scaleX(1);
+        }
+      }
+
+      .nav-link:focus-visible::after {
+        transform: scaleX(1);
+      }
+
+      /* Smooth README expand */
+      @keyframes panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .panel-in {
+        animation: panel-in 0.45s var(--ease-out-soft) both;
+      }
+
+      /* Soft fade for async content (repos, contribution graph) */
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .fade-in {
+        animation: fade-in 0.6s ease both;
+      }
+
+      /* Print everything, even sections not yet revealed on screen */
+      @media print {
+        .reveal,
+        .hero-rise,
+        .panel-in,
+        .fade-in {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .reveal,
+        .hero-rise,
+        .panel-in,
+        .fade-in {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+          animation: none !important;
+        }
+
+        .card-lift,
+        .press,
+        .nav-link::after {
+          transition: none !important;
+        }
+      }
     </style>
 
     <script src="https://cdn.tailwindcss.com"></script>
