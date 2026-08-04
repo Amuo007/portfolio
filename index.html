@@ -236,6 +236,23 @@
         animation: panel-in 0.45s var(--ease-out-soft) both;
       }
 
+      /* Gentle breathing dot for "In Progress" status */
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.45;
+          transform: scale(0.75);
+        }
+      }
+
+      .pulse-dot {
+        animation: pulse-dot 2s ease-in-out infinite;
+      }
+
       /* Language bar sweeps in from the left when revealed */
       .reveal .lang-track {
         transform: scaleX(0);
@@ -351,6 +368,10 @@
         .back-to-top {
           display: none !important;
         }
+
+        .pulse-dot {
+          animation: none !important;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -379,6 +400,10 @@
 
         .back-to-top {
           transform: none !important;
+        }
+
+        .pulse-dot {
+          animation: none !important;
         }
 
         .card-lift,
