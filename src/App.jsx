@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
+// Bundled locally by Vite — faster and more reliable than hotlinking
+// the images from raw.githubusercontent.com.
+import profileImg from "../profile.jpeg";
+import internImg from "../intern.jpg";
+import posterImg from "../poster.jpg";
+
 const GITHUB_USERNAME = "Amuo007";
 const EXCLUDED_REPOS = [];
 
@@ -168,8 +174,7 @@ const experiences = [
     type: "Full-time",
     dates: "May 2026 – Present",
     location: "Houston, TX · On-site",
-    image:
-      "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/intern.jpg",
+    image: internImg,
     logo: "G",
     logoColor: "bg-blue-600",
     description: [
@@ -185,8 +190,7 @@ const experiences = [
     type: "Full-time",
     dates: "Jan 2026 – Aug 2026",
     location: "United States · On-site",
-    image:
-      "https://raw.githubusercontent.com/Amuo007/portfolio/refs/heads/main/poster.jpg",
+    image: posterImg,
     logo: "UH",
     logoColor: "bg-red-600",
     description: [
@@ -476,6 +480,8 @@ const ContributionGraph = () => {
   );
 };
 
+const EMAIL_ADDRESS = "Amrinderbalharjob@gmail.com";
+
 // Fades content in as it scrolls into view. Falls back to visible
 // when IntersectionObserver isn't available.
 const Reveal = ({ children, delay = 0, className = "" }) => {
@@ -568,6 +574,154 @@ const CountUp = ({ value, duration = 1200 }) => {
   }, [value, duration]);
 
   return <span ref={ref}>{display.toLocaleString()}</span>;
+};
+
+// GitHub-style bar showing how repositories split across languages.
+const LanguageBar = ({ repos }) => {
+  const counts = {};
+
+  repos.forEach((repo) => {
+    if (repo.language) {
+      counts[repo.language] = (counts[repo.language] || 0) + 1;
+    }
+  });
+
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [, count]) => sum + count, 0);
+
+  if (total === 0) return null;
+
+  return (
+    <Reveal className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
+        <h3 className="text-lg font-bold text-gray-900">Languages</h3>
+
+        <p className="text-sm text-gray-500">
+          across {total} repositor{total === 1 ? "y" : "ies"}
+        </p>
+      </div>
+
+      <div className="lang-track flex h-2.5 rounded-full overflow-hidden bg-gray-100 gap-[2px]">
+        {entries.map(([language, count]) => (
+          <div
+            key={language}
+            title={`${language}: ${count}`}
+            className="h-full"
+            style={{
+              width: `${(count / total) * 100}%`,
+              backgroundColor: getLanguageColor(language),
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+        {entries.map(([language, count], index) => (
+          <span
+            key={language}
+            style={{ "--stagger-delay": `${Math.min(index * 60, 360)}ms` }}
+            className="stagger-item flex items-center gap-1.5 text-xs text-gray-600"
+          >
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: getLanguageColor(language) }}
+            />
+            {language}
+            <span className="text-gray-400">{count}</span>
+          </span>
+        ))}
+      </div>
+    </Reveal>
+  );
+};
+
+// Copies the email address and briefly confirms it.
+const CopyEmailButton = () => {
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = async () => {
+    trackEvent("Contact", "Click", "Copy Email");
+
+    try {
+      await navigator.clipboard.writeText(EMAIL_ADDRESS);
+    } catch {
+      const helper = document.createElement("textarea");
+
+      helper.value = EMAIL_ADDRESS;
+      helper.setAttribute("readonly", "");
+      helper.style.position = "absolute";
+      helper.style.left = "-9999px";
+      document.body.appendChild(helper);
+      helper.select();
+
+      try {
+        document.execCommand("copy");
+      } catch {
+        // Copy unsupported — the mailto link still works.
+      }
+
+      document.body.removeChild(helper);
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={copyEmail}
+      className={`press text-xs border rounded-full px-2.5 py-0.5 align-middle ${
+        copied
+          ? "text-green-600 border-green-300 bg-green-50"
+          : "text-gray-600 border-gray-300 bg-white hover:text-red-700 hover:border-red-300"
+      }`}
+    >
+      {copied ? "Copied ✓" : "Copy"}
+    </button>
+  );
+};
+
+// Floating button that appears after scrolling down a bit.
+const BackToTop = () => {
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShown(window.scrollY > 600);
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      aria-label="Back to top"
+      title="Back to top"
+      onClick={() => {
+        trackEvent("Navigation", "Click", "Back to Top");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+      className={`back-to-top ${shown ? "is-shown" : ""}`}
+    >
+      <svg
+        className="w-5 h-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.5 15.75l7.5-7.5 7.5 7.5"
+        />
+      </svg>
+    </button>
+  );
 };
 
 const NavLink = ({ href, label, active }) => (
@@ -730,6 +884,7 @@ export default function App() {
   const [loadingReadme, setLoadingReadme] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("All");
   const progressRef = useRef(null);
 
   useEffect(() => {
@@ -990,6 +1145,21 @@ export default function App() {
     }
   };
 
+  const languageCounts = {};
+
+  repos.forEach((repo) => {
+    if (repo.language) {
+      languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
+    }
+  });
+
+  const languages = Object.entries(languageCounts).sort((a, b) => b[1] - a[1]);
+
+  const filteredRepos =
+    languageFilter === "All"
+      ? repos
+      : repos.filter((repo) => repo.language === languageFilter);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header
@@ -1043,7 +1213,7 @@ export default function App() {
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 md:p-10">
             <div className="flex flex-col md:flex-row md:items-center gap-8">
               <img
-                src="https://github.com/Amuo007/portfolio/blob/main/profile.jpeg?raw=true"
+                src={profileImg}
                 alt="Portrait of Amrinder Singh"
                 className="hero-rise w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
               />
@@ -1287,6 +1457,47 @@ export default function App() {
 
           <ContributionGraph />
 
+          {!loadingRepos && !repoError && repos.length > 0 && (
+            <LanguageBar repos={repos} />
+          )}
+
+          {!loadingRepos && !repoError && languages.length > 1 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent("Projects", "Filter", "All");
+                  setLanguageFilter("All");
+                }}
+                className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
+                  languageFilter === "All"
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                }`}
+              >
+                All ({repos.length})
+              </button>
+
+              {languages.map(([language, count]) => (
+                <button
+                  key={language}
+                  type="button"
+                  onClick={() => {
+                    trackEvent("Projects", "Filter", language);
+                    setLanguageFilter(language);
+                  }}
+                  className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
+                    languageFilter === language
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                  }`}
+                >
+                  {language} ({count})
+                </button>
+              ))}
+            </div>
+          )}
+
           {loadingRepos ? (
             <div className="space-y-4">
               {[1, 2, 3].map((item) => (
@@ -1321,23 +1532,29 @@ export default function App() {
               No repositories found.
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-5">
-              {repos.map((repo, index) => (
-                <Reveal
-                  key={repo.id}
-                  delay={(index % 2) * 70}
-                  className="h-full"
-                >
-                  <RepoCard
-                    repo={repo}
-                    isExpanded={expandedRepo === repo.name}
-                    isLoading={loadingReadme === repo.name}
-                    details={repoDetails[repo.name]}
-                    onToggleReadme={toggleReadme}
-                  />
-                </Reveal>
-              ))}
-            </div>
+            filteredRepos.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
+                No repositories match this filter.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-5">
+                {filteredRepos.map((repo, index) => (
+                  <Reveal
+                    key={repo.id}
+                    delay={(index % 2) * 70}
+                    className="h-full"
+                  >
+                    <RepoCard
+                      repo={repo}
+                      isExpanded={expandedRepo === repo.name}
+                      isLoading={loadingReadme === repo.name}
+                      details={repoDetails[repo.name]}
+                      onToggleReadme={toggleReadme}
+                    />
+                  </Reveal>
+                ))}
+              </div>
+            )
           )}
         </section>
 
@@ -1443,7 +1660,7 @@ export default function App() {
                     <strong>Location:</strong> Houston, TX
                   </p>
 
-                  <p>
+                  <p className="flex items-center gap-2 flex-wrap">
                     <strong>Email:</strong>{" "}
                     <a
                       href="mailto:Amrinderbalharjob@gmail.com"
@@ -1454,10 +1671,11 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="text-red-600 hover:underline"
+                      className="text-red-600 hover:underline break-all"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
+                    <CopyEmailButton />
                   </p>
 
                   <p>
@@ -1511,6 +1729,8 @@ export default function App() {
           </Reveal>
         </section>
       </main>
+
+      <BackToTop />
 
       <footer className="bg-white border-t border-gray-200 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-gray-500">

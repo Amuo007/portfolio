@@ -236,6 +236,58 @@
         animation: panel-in 0.45s var(--ease-out-soft) both;
       }
 
+      /* Language bar sweeps in from the left when revealed */
+      .reveal .lang-track {
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 0.9s var(--ease-out-soft) 0.15s;
+      }
+
+      .reveal.is-visible .lang-track {
+        transform: scaleX(1);
+      }
+
+      /* Floating back-to-top button */
+      .back-to-top {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 40;
+        width: 2.75rem;
+        height: 2.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.92);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 8px 24px -12px rgba(17, 24, 39, 0.25);
+        color: #374151;
+        opacity: 0;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition:
+          opacity 0.4s var(--ease-out-soft),
+          transform 0.4s var(--ease-out-soft),
+          color 0.2s ease;
+      }
+
+      .back-to-top:hover {
+        color: #dc2626;
+      }
+
+      .back-to-top:active {
+        transform: scale(0.94);
+      }
+
+      .back-to-top.is-shown {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
       /* Contribution cells pop in one by one, sweeping across the graph */
       @keyframes cell-pop {
         0% {
@@ -290,9 +342,14 @@
           animation: none !important;
         }
 
-        .heading-accent::after {
+        .heading-accent::after,
+        .reveal .lang-track {
           transform: none !important;
           transition: none !important;
+        }
+
+        .back-to-top {
+          display: none !important;
         }
       }
 
@@ -314,14 +371,20 @@
           animation: none !important;
         }
 
-        .heading-accent::after {
+        .heading-accent::after,
+        .reveal .lang-track {
           transform: none !important;
           transition: none !important;
         }
 
+        .back-to-top {
+          transform: none !important;
+        }
+
         .card-lift,
         .press,
-        .nav-link::after {
+        .nav-link::after,
+        .back-to-top {
           transition: none !important;
         }
       }
