@@ -164,11 +164,11 @@ const renderMarkdown = (md) => {
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(
       /`([^`]+)`/g,
-      '<code class="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">$1</code>'
+      '<code class="bg-gray-100 text-slate-800 px-1 rounded text-sm font-mono">$1</code>'
     )
     .replace(
       MARKDOWN_LINK_REGEX,
-      '<a href="$2" target="_blank" rel="noreferrer" class="text-red-600 hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noreferrer" class="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950">$1</a>'
     )
     .replace(
       /^\s*[-*] (.+)$/gm,
@@ -808,8 +808,8 @@ const CopyEmailButton = () => {
       onClick={copyEmail}
       className={`press text-xs border rounded-full px-2.5 py-0.5 align-middle ${
         copied
-          ? "text-green-600 border-green-300 bg-green-50"
-          : "text-gray-600 border-gray-300 bg-white hover:text-red-700 hover:border-red-300"
+          ? "text-green-700 border-green-300 bg-green-50"
+          : "text-gray-600 border-gray-300 bg-white hover:text-gray-950 hover:border-gray-400"
       }`}
     >
       {copied ? "Copied ✓" : "Copy"}
@@ -865,8 +865,8 @@ const NavLink = ({ href, label, active }) => (
     onClick={() => trackEvent("Navigation", "Click", label)}
     aria-current={active ? "true" : undefined}
     className={`nav-link ${
-      active ? "nav-link-active text-red-700" : "text-gray-700"
-    } flex-none text-sm font-medium hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
+      active ? "nav-link-active text-gray-950" : "text-gray-600"
+    } flex-none text-sm font-medium hover:text-gray-950 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
   >
     {label}
   </a>
@@ -963,7 +963,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               target="_blank"
               rel="noreferrer"
               onClick={handleRepositoryClick}
-              className="text-xl font-bold text-gray-900 hover:text-red-600"
+              className="text-xl font-bold text-gray-900 hover:text-gray-600"
             >
               {repo.name}
             </a>
@@ -1034,7 +1034,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <button
           type="button"
           onClick={handleReadmeClick}
-          className="text-sm text-red-600 hover:underline font-medium"
+          className="text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
         >
           {isLoading
             ? "Loading README..."
@@ -1456,9 +1456,9 @@ export default function App() {
       : repos.filter((repo) => repo.language === languageFilter);
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-gray-50 text-gray-900">
+    <div className="min-h-screen overflow-x-clip bg-[#f7f7f8] text-gray-900">
       <header
-        className={`bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-300 ${
+        className={`bg-white/95 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-200 ${
           scrolled ? "shadow-sm" : ""
         }`}
       >
@@ -1510,13 +1510,13 @@ export default function App() {
               <img
                 src={profileImg}
                 alt="Portrait of Amrinder Singh"
-                className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
+                className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-2 border-red-700 shadow-sm"
               />
 
               <div className="min-w-0 flex-1">
                 <p
                   className="hero-rise break-words text-sm font-semibold leading-snug text-red-700 sm:text-base mb-2"
-                  style={{ "--rise-delay": "80ms" }}
+                  style={{ "--rise-delay": "40ms" }}
                 >
                   <span>Software Engineer Intern</span>
                   <span className="hidden sm:inline"> · </span>
@@ -1527,21 +1527,21 @@ export default function App() {
 
                 <h1
                   className="hero-rise text-4xl md:text-5xl font-bold text-gray-900 mb-3"
-                  style={{ "--rise-delay": "160ms" }}
+                  style={{ "--rise-delay": "80ms" }}
                 >
                   Amrinder Singh
                 </h1>
 
                 <p
                   className="hero-rise text-xl text-gray-600 mb-4"
-                  style={{ "--rise-delay": "240ms" }}
+                  style={{ "--rise-delay": "120ms" }}
                 >
                   Full-Stack, AI, and AR Developer
                 </p>
 
                 <p
                   className="hero-rise max-w-3xl break-words text-gray-700 leading-relaxed mb-6"
-                  style={{ "--rise-delay": "320ms" }}
+                  style={{ "--rise-delay": "160ms" }}
                 >
                   Computer Science student at the University of Houston building
                   full-stack, AI, and AR applications. Currently working as a
@@ -1551,14 +1551,14 @@ export default function App() {
 
                 <div
                   className="hero-rise flex max-w-full flex-wrap items-center gap-3"
-                  style={{ "--rise-delay": "400ms" }}
+                  style={{ "--rise-delay": "200ms" }}
                 >
                   <a
                     href="#projects"
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="press w-full bg-red-600 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium"
+                    className="press w-full bg-gray-950 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-gray-800 font-medium"
                   >
                     View Projects
                   </a>
@@ -1643,7 +1643,7 @@ export default function App() {
 
                 <div
                   className="hero-rise mt-8 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-3"
-                  style={{ "--rise-delay": "480ms" }}
+                  style={{ "--rise-delay": "240ms" }}
                 >
                   {heroHighlights.map((item) => (
                     <div key={item.label}>
@@ -1706,7 +1706,7 @@ export default function App() {
                           {exp.role}
                         </h3>
 
-                        <p className="text-red-700 font-semibold">
+                        <p className="text-gray-900 font-semibold">
                           {exp.company} · {exp.type}
                         </p>
 
@@ -1715,7 +1715,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      <span className="text-sm bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full w-fit">
+                      <span className="text-sm bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1 rounded-full w-fit">
                         {exp.dates}
                       </span>
                     </div>
@@ -1723,7 +1723,7 @@ export default function App() {
                     <ul className="space-y-2 text-gray-700 text-sm mb-4">
                       {exp.description.map((item) => (
                         <li key={item} className="flex gap-2">
-                          <span className="text-red-600">•</span>
+                          <span className="text-slate-400">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -1757,7 +1757,7 @@ export default function App() {
                 onClick={() =>
                   trackEvent("Projects", "Click", "GitHub Username")
                 }
-                className="text-red-600 hover:underline font-medium"
+                className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
               >
                 @{GITHUB_USERNAME}
               </a>
@@ -1795,8 +1795,8 @@ export default function App() {
                 }}
                 className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                   languageFilter === "All"
-                    ? "bg-red-600 text-white border-red-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                    ? "bg-gray-950 text-white border-gray-950"
+                    : "bg-white text-gray-700 border-gray-300 hover:text-gray-950 hover:border-gray-400"
                 }`}
               >
                 All ({repos.length})
@@ -1812,8 +1812,8 @@ export default function App() {
                   }}
                   className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                     languageFilter === language
-                      ? "bg-red-600 text-white border-red-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                      ? "bg-gray-950 text-white border-gray-950"
+                      : "bg-white text-gray-700 border-gray-300 hover:text-gray-950 hover:border-gray-400"
                   }`}
                 >
                   {language} ({count})
@@ -2014,7 +2014,7 @@ export default function App() {
 
                         {cert.inProgress && (
                           <span className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
-                            <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-blue-600" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                             In Progress
                           </span>
                         )}
@@ -2102,7 +2102,7 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="text-red-600 hover:underline break-all"
+                      className="break-all text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
@@ -2116,7 +2116,7 @@ export default function App() {
                       onClick={() =>
                         trackEvent("Contact", "Click", "Phone Number")
                       }
-                      className="text-red-600 hover:underline"
+                      className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
                     >
                       (832) 263-4489
                     </a>
@@ -2137,7 +2137,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact GitHub")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
                   >
                     GitHub
                   </a>
@@ -2149,7 +2149,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
                   >
                     LinkedIn
                   </a>
@@ -2159,7 +2159,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Email Me Link")
                     }
-                    className="text-red-600 hover:underline"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
                   >
                     Email Me
                   </a>
