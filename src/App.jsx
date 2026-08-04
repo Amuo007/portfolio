@@ -168,7 +168,7 @@ const renderMarkdown = (md) => {
     )
     .replace(
       MARKDOWN_LINK_REGEX,
-      '<a href="$2" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noreferrer" class="text-red-600 hover:underline">$1</a>'
     )
     .replace(
       /^\s*[-*] (.+)$/gm,
@@ -281,27 +281,32 @@ const certifications = [
     title: "Complete Data Science & Machine Learning Bootcamp",
     issuer: "Udemy",
     issued: "Jan 2022",
+    logo: "udemy",
   },
   {
     title: "TensorFlow 2: Deep Learning & Artificial Intelligence",
     issuer: "Udemy",
     issued: "May 2024",
+    logo: "udemy",
   },
   {
     title: "iOS & Swift - The Complete iOS App Development Bootcamp",
     issuer: "Udemy",
     issued: "Dec 2023",
+    logo: "udemy",
   },
   {
     title: "The Complete Full-Stack Web Development Bootcamp",
     issuer: "Udemy",
     issued: "May 2022",
+    logo: "udemy",
   },
   {
     title: "Electronic Arts - Software Engineering Job Simulation",
     issuer: "Forage",
     issued: "Feb 2025",
     credentialId: "69W4vPnb6zwW6gq75",
+    logo: "forage",
   },
 ];
 
@@ -711,7 +716,7 @@ const LanguageBar = ({ repos }) => {
 // Official multicolor Google "G" mark.
 const GoogleLogo = () => (
   <svg
-    className="w-5 h-5 flex-shrink-0"
+    className="w-4 h-4 flex-shrink-0"
     viewBox="0 0 48 48"
     aria-hidden="true"
   >
@@ -732,6 +737,37 @@ const GoogleLogo = () => (
       d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
     />
   </svg>
+);
+
+const UdemyLogo = () => (
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill="#A435F0"
+    aria-hidden="true"
+  >
+    <path d="M12 0 5.81 3.573v3.574l6.189-3.574 6.191 3.574V3.573L12 0ZM5.81 10.148v8.144c0 1.85.589 3.243 1.741 4.234C8.703 23.517 10.177 24 11.973 24s3.269-.482 4.448-1.474c1.179-.991 1.768-2.439 1.768-4.314v-8.064h-3.242v7.85c0 2.036-1.509 3.055-2.948 3.055-1.428 0-2.947-.991-2.947-3.027v-7.878H5.81Z" />
+  </svg>
+);
+
+const ForageLogo = () => (
+  <img
+    src="https://cdn-assets.theforage.com/favicon/favicon-96x96.png"
+    alt=""
+    className="w-4 h-4 object-contain"
+    loading="lazy"
+  />
+);
+
+const CertificationLogo = ({ provider }) => (
+  <span
+    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+    aria-hidden="true"
+  >
+    {provider === "google" && <GoogleLogo />}
+    {provider === "udemy" && <UdemyLogo />}
+    {provider === "forage" && <ForageLogo />}
+  </span>
 );
 
 // Copies the email address and briefly confirms it.
@@ -773,7 +809,7 @@ const CopyEmailButton = () => {
       className={`press text-xs border rounded-full px-2.5 py-0.5 align-middle ${
         copied
           ? "text-green-600 border-green-300 bg-green-50"
-          : "text-gray-600 border-gray-300 bg-white hover:text-blue-700 hover:border-blue-300"
+          : "text-gray-600 border-gray-300 bg-white hover:text-red-700 hover:border-red-300"
       }`}
     >
       {copied ? "Copied ✓" : "Copy"}
@@ -829,8 +865,8 @@ const NavLink = ({ href, label, active }) => (
     onClick={() => trackEvent("Navigation", "Click", label)}
     aria-current={active ? "true" : undefined}
     className={`nav-link ${
-      active ? "nav-link-active text-blue-700" : "text-gray-700"
-    } flex-none text-sm font-medium hover:text-blue-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
+      active ? "nav-link-active text-red-700" : "text-gray-700"
+    } flex-none text-sm font-medium hover:text-red-700 transition-colors px-2.5 py-2 md:px-3 whitespace-nowrap`}
   >
     {label}
   </a>
@@ -927,7 +963,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               target="_blank"
               rel="noreferrer"
               onClick={handleRepositoryClick}
-              className="text-xl font-bold text-gray-900 hover:text-blue-600"
+              className="text-xl font-bold text-gray-900 hover:text-red-600"
             >
               {repo.name}
             </a>
@@ -998,7 +1034,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <button
           type="button"
           onClick={handleReadmeClick}
-          className="text-sm text-blue-600 hover:underline font-medium"
+          className="text-sm text-red-600 hover:underline font-medium"
         >
           {isLoading
             ? "Loading README..."
@@ -1420,7 +1456,7 @@ export default function App() {
       : repos.filter((repo) => repo.language === languageFilter);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-50 text-gray-900">
+    <div className="min-h-screen overflow-x-clip bg-gray-50 text-gray-900">
       <header
         className={`bg-white/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-300 ${
           scrolled ? "shadow-sm" : ""
@@ -1474,12 +1510,12 @@ export default function App() {
               <img
                 src={profileImg}
                 alt="Portrait of Amrinder Singh"
-                className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-4 border-blue-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
+                className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-4 border-red-600 shadow-md transition-transform duration-500 hover:scale-[1.03]"
               />
 
               <div className="min-w-0 flex-1">
                 <p
-                  className="hero-rise break-words text-sm font-semibold leading-snug text-blue-600 sm:text-base mb-2"
+                  className="hero-rise break-words text-sm font-semibold leading-snug text-red-700 sm:text-base mb-2"
                   style={{ "--rise-delay": "80ms" }}
                 >
                   <span>Software Engineer Intern</span>
@@ -1522,7 +1558,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="press w-full bg-blue-600 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-blue-700 font-medium"
+                    className="press w-full bg-red-600 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-red-700 font-medium"
                   >
                     View Projects
                   </a>
@@ -1670,7 +1706,7 @@ export default function App() {
                           {exp.role}
                         </h3>
 
-                        <p className="text-blue-700 font-semibold">
+                        <p className="text-red-700 font-semibold">
                           {exp.company} · {exp.type}
                         </p>
 
@@ -1679,7 +1715,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      <span className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full w-fit">
+                      <span className="text-sm bg-red-50 text-red-700 border border-red-100 px-3 py-1 rounded-full w-fit">
                         {exp.dates}
                       </span>
                     </div>
@@ -1687,7 +1723,7 @@ export default function App() {
                     <ul className="space-y-2 text-gray-700 text-sm mb-4">
                       {exp.description.map((item) => (
                         <li key={item} className="flex gap-2">
-                          <span className="text-blue-600">•</span>
+                          <span className="text-red-600">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -1721,7 +1757,7 @@ export default function App() {
                 onClick={() =>
                   trackEvent("Projects", "Click", "GitHub Username")
                 }
-                className="text-blue-600 hover:underline font-medium"
+                className="text-red-600 hover:underline font-medium"
               >
                 @{GITHUB_USERNAME}
               </a>
@@ -1759,8 +1795,8 @@ export default function App() {
                 }}
                 className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                   languageFilter === "All"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:text-blue-700 hover:border-blue-300"
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
                 }`}
               >
                 All ({repos.length})
@@ -1776,8 +1812,8 @@ export default function App() {
                   }}
                   className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                     languageFilter === language
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:text-blue-700 hover:border-blue-300"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
                   }`}
                 >
                   {language} ({count})
@@ -1880,7 +1916,7 @@ export default function App() {
           <Reveal className="mb-6 bg-slate-950 text-white rounded-lg shadow-sm overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 p-6 md:p-8 border-b border-white/10">
               <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-300">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-300">
                   UH Software Engineering Milestone
                 </p>
 
@@ -1912,7 +1948,7 @@ export default function App() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-blue-300">
+                    <span className="text-xs font-semibold text-red-300">
                       {course.code}
                     </span>
 
@@ -1970,70 +2006,73 @@ export default function App() {
                       cert.inProgress ? "border-blue-500" : "border-slate-300"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      {cert.logo === "google" && <GoogleLogo />}
+                    <div className="flex items-start gap-3">
+                      {cert.logo && <CertificationLogo provider={cert.logo} />}
 
-                      <p className="font-semibold text-gray-900">
-                        {cert.title}
-                      </p>
-                    </div>
-
-                    <p className="text-sm text-gray-600">
-                      {cert.issuer}
-                      {cert.issued ? ` · Issued ${cert.issued}` : ""}
-                    </p>
-
-                    {cert.inProgress && (
-                      <span className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
-                        <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-blue-600" />
-                        In Progress
-                      </span>
-                    )}
-
-                    {cert.progress && (
-                      <div className="mt-3 max-w-md">
-                        <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-600 mb-1.5">
-                          <span>{cert.progress.label}</span>
-                          <span>
-                            {Math.round(
-                              (cert.progress.completed / cert.progress.total) *
-                                100
-                            )}
-                            %
-                          </span>
-                        </div>
-
-                        <div
-                          className="h-2 rounded-full bg-slate-100 overflow-hidden"
-                          aria-label={`${cert.progress.completed} of ${cert.progress.total} modules complete`}
-                          aria-valuemax={cert.progress.total}
-                          aria-valuemin="0"
-                          aria-valuenow={cert.progress.completed}
-                          role="progressbar"
-                        >
-                          <div
-                            className="h-full rounded-full bg-blue-600"
-                            style={{
-                              width: `${
-                                (cert.progress.completed /
-                                  cert.progress.total) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-
-                        <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                          {cert.progress.note}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold leading-snug text-gray-900">
+                          {cert.title}
                         </p>
-                      </div>
-                    )}
 
-                    {cert.credentialId && (
-                      <p className="text-sm text-gray-500">
-                        Credential ID: {cert.credentialId}
-                      </p>
-                    )}
+                        <p className="mt-0.5 text-sm text-gray-600">
+                          {cert.issuer}
+                          {cert.issued ? ` · Issued ${cert.issued}` : ""}
+                        </p>
+
+                        {cert.inProgress && (
+                          <span className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+                            <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-blue-600" />
+                            In Progress
+                          </span>
+                        )}
+
+                        {cert.progress && (
+                          <div className="mt-3 max-w-md">
+                            <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-600 mb-1.5">
+                              <span>{cert.progress.label}</span>
+                              <span>
+                                {Math.round(
+                                  (cert.progress.completed /
+                                    cert.progress.total) *
+                                    100
+                                )}
+                                %
+                              </span>
+                            </div>
+
+                            <div
+                              className="h-2 rounded-full bg-slate-100 overflow-hidden"
+                              aria-label={`${cert.progress.completed} of ${cert.progress.total} modules complete`}
+                              aria-valuemax={cert.progress.total}
+                              aria-valuemin="0"
+                              aria-valuenow={cert.progress.completed}
+                              role="progressbar"
+                            >
+                              <div
+                                className="h-full rounded-full bg-blue-600"
+                                style={{
+                                  width: `${
+                                    (cert.progress.completed /
+                                      cert.progress.total) *
+                                    100
+                                  }%`,
+                                }}
+                              />
+                            </div>
+
+                            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                              {cert.progress.note}
+                            </p>
+                          </div>
+                        )}
+
+                        {cert.credentialId && (
+                          <p className="mt-1 text-sm text-gray-500">
+                            Credential ID: {cert.credentialId}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -2070,7 +2109,7 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="text-blue-600 hover:underline break-all"
+                      className="text-red-600 hover:underline break-all"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
@@ -2084,7 +2123,7 @@ export default function App() {
                       onClick={() =>
                         trackEvent("Contact", "Click", "Phone Number")
                       }
-                      className="text-blue-600 hover:underline"
+                      className="text-red-600 hover:underline"
                     >
                       (832) 263-4489
                     </a>
@@ -2105,7 +2144,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact GitHub")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     GitHub
                   </a>
@@ -2117,7 +2156,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     LinkedIn
                   </a>
@@ -2127,7 +2166,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Email Me Link")
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     Email Me
                   </a>
