@@ -273,6 +273,69 @@ body {
   animation: play-pulse 2.2s ease-in-out infinite;
 }
 
+/* ---- Name gate ---- */
+
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(6, 4, 12, 0.82);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: gate-in 0.4s var(--ease-out-soft) both;
+}
+
+@keyframes gate-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gate-overlay.is-leaving {
+  animation: gate-out 0.42s var(--ease-out-soft) both;
+  pointer-events: none;
+}
+
+@keyframes gate-out {
+  to {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+
+.gate-card {
+  animation: gate-card-in 0.5s var(--ease-out-soft) 0.06s both;
+  box-shadow: 0 30px 80px -30px rgba(168, 85, 247, 0.7);
+}
+
+@keyframes gate-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* The uncatchable skip button. Centred on its own coordinates so the
+   percentage position places its middle, not its corner. */
+.runaway {
+  transform: translate(-50%, -50%);
+  transition:
+    left 0.19s var(--ease-out-soft),
+    top 0.19s var(--ease-out-soft);
+  will-change: left, top;
+}
+
 /* Unlock toast drops in and holds */
 @keyframes toast-in {
   0% {
@@ -376,6 +439,17 @@ body {
 
   .tilt-card {
     transform: none !important;
+    transition: none !important;
+  }
+
+  .gate-overlay,
+  .gate-card {
+    animation: none !important;
+  }
+
+  /* The button still has to move — that's the joke, not decoration —
+     it just teleports instead of gliding. */
+  .runaway {
     transition: none !important;
   }
 

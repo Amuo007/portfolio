@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createHeroBackground } from "./instagram-bg";
 import GameCanvas from "./GameCanvas";
 import { GOAL_SCORE, UNLOCK_KEY } from "./instagram-game";
+import NameGate, { NAME_KEY } from "./NameGate";
 
 // This page is intentionally unlisted — nothing on the main site links to
 // it. It exists only for people who tap the link in my Instagram bio.
@@ -124,6 +125,25 @@ export default function InstagramPage() {
 
   const handleUnlock = useCallback(() => setUnlocked(true), []);
 
+  // Returning visitors keep their name and skip straight past the gate.
+  const [visitorName, setVisitorName] = useState(() => {
+    try {
+      return localStorage.getItem(NAME_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
+
+  const handleName = useCallback((name) => {
+    setVisitorName(name);
+
+    try {
+      localStorage.setItem(NAME_KEY, name);
+    } catch {
+      // Storage unavailable — the name still holds for this visit.
+    }
+  }, []);
+
   useEffect(() => {
     const bg = createHeroBackground(bgCanvasRef.current);
 
@@ -148,6 +168,8 @@ export default function InstagramPage() {
 
   return (
     <div className="relative bg-[#0b0b13] text-white">
+      {!visitorName && <NameGate onDone={handleName} />}
+
       {/* ---- Hero ---- */}
       <section className="relative min-h-svh overflow-hidden">
         <canvas
@@ -191,18 +213,20 @@ export default function InstagramPage() {
           </h1>
 
           <p
-            className="pop shimmer-text mt-2 bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl"
+            className="pop shimmer-text mt-2 break-words bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl"
             style={{ "--pop-delay": "280ms" }}
           >
-            look who slid out of Instagram 👀
+            {visitorName
+              ? `if it isn't ${visitorName} 👀`
+              : "look who slid out of Instagram 👀"}
           </p>
 
           <p
             className="pop mt-4 max-w-sm text-base leading-relaxed text-white/70"
             style={{ "--pop-delay": "400ms" }}
           >
-            Which wandering soul do we have here? One second you were
-            doom-scrolling, and now you're snooping around my secret page.
+            One second you were doom-scrolling, and now you're snooping
+            around my secret page. Bold move.
           </p>
 
           <TiltCard
@@ -219,11 +243,19 @@ export default function InstagramPage() {
               </span>
             </div>
 
-            <div className="mb-4 flex items-center justify-between gap-3 text-sm">
+            <div className="mb-3 flex items-center justify-between gap-3 text-sm">
               <span className="text-white/60">Source</span>
 
               <span className="rounded-full border border-pink-400/30 bg-gradient-to-r from-amber-400/20 via-pink-500/20 to-purple-600/20 px-2.5 py-0.5 text-xs font-semibold text-pink-200">
                 Instagram bio link
+              </span>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between gap-3 text-sm">
+              <span className="text-white/60">Subject</span>
+
+              <span className="min-w-0 truncate font-semibold text-white">
+                {visitorName || "unidentified"}
               </span>
             </div>
 
@@ -257,8 +289,8 @@ export default function InstagramPage() {
               <span className="font-semibold text-white">
                 certified wandering soul
               </span>{" "}
-              ✅ — saw a mysterious link, pressed it without hesitation.
-              Honestly? Respect.
+              ✅ — saw a mysterious link, pressed it without hesitation,
+              then couldn't even catch the skip button. Honestly? Respect.
             </p>
           </TiltCard>
 
