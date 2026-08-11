@@ -1,0 +1,385 @@
+@import "tailwindcss";
+
+/* Styles for the unlisted /instagram page only — the main site never
+   loads this file, so nothing here can leak into the portfolio. */
+
+:root {
+  --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #831843;
+  color: #fdf2f8;
+}
+
+:focus-visible {
+  outline: 2px solid #f9a8d4;
+  outline-offset: 3px;
+}
+
+/* Staged entrance for each block on the page */
+@keyframes pop-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pop {
+  animation: pop-up 0.55s var(--ease-out-soft) backwards;
+  animation-delay: var(--pop-delay, 0ms);
+}
+
+/* The tappable face springs every time it changes */
+@keyframes face-pop {
+  0% {
+    transform: scale(0.7) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.face {
+  display: block;
+  animation: face-pop 0.4s var(--ease-out-soft);
+}
+
+/* Scan bars sweep in from the left, one after another */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.scan-bar {
+  transform-origin: left center;
+  animation: bar-grow 0.9s var(--ease-out-soft) backwards;
+  animation-delay: var(--bar-delay, 0ms);
+}
+
+/* Pulsing "live" indicator on the scan card */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 5px rgba(248, 113, 113, 0);
+  }
+}
+
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #f87171;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+/* Slow-drifting gradient blobs behind everything */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+}
+
+.blob-a {
+  top: -80px;
+  left: -90px;
+  width: 300px;
+  height: 300px;
+  background: #f59e0b;
+  opacity: 0.26;
+  animation: drift-a 16s ease-in-out infinite alternate;
+}
+
+.blob-b {
+  top: 32%;
+  right: -110px;
+  width: 340px;
+  height: 340px;
+  background: #ec4899;
+  opacity: 0.2;
+  animation: drift-b 19s ease-in-out infinite alternate;
+}
+
+.blob-c {
+  bottom: -100px;
+  left: 12%;
+  width: 320px;
+  height: 320px;
+  background: #8b5cf6;
+  opacity: 0.24;
+  animation: drift-c 22s ease-in-out infinite alternate;
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate(45px, 35px) scale(1.12);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate(-40px, -50px) scale(1.08);
+  }
+}
+
+@keyframes drift-c {
+  to {
+    transform: translate(50px, -30px) scale(1.15);
+  }
+}
+
+/* Gradient text that slowly shimmers left-to-right */
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.shimmer-text {
+  background-size: 200% auto;
+  animation: shimmer 3.5s linear infinite;
+}
+
+/* Bouncing "scroll down" cue */
+@keyframes cue-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.scroll-cue span:last-child {
+  animation: cue-bounce 1.6s ease-in-out infinite;
+}
+
+/* Pointer-follow 3D tilt (desktop); resting float on touch */
+.tilt-card {
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+/* Scroll-triggered reveal for lower sections */
+.srv {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s var(--ease-out-soft),
+    transform 0.5s var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.srv.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Countdown numbers zoom in and fade */
+@keyframes count-zoom {
+  0% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.countdown-num {
+  animation: count-zoom 0.9s var(--ease-out-soft) both;
+}
+
+/* HUD chips pop when their value changes (keyed re-mount) */
+@keyframes hud-pop {
+  0% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.hud-chip {
+  animation: hud-pop 0.25s var(--ease-out-soft);
+}
+
+/* Game-over panel springs in */
+@keyframes panel-spring {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.over-panel {
+  animation: panel-spring 0.45s var(--ease-out-soft) both;
+}
+
+/* Pulsing glow on the play buttons */
+@keyframes play-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 22px -4px rgba(236, 72, 153, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 34px -2px rgba(168, 85, 247, 0.75);
+  }
+}
+
+.play-glow {
+  animation: play-pulse 2.2s ease-in-out infinite;
+}
+
+/* Unlock toast drops in and holds */
+@keyframes toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+}
+
+.unlock-toast {
+  animation: toast-in 3.6s var(--ease-out-soft) both;
+  box-shadow: 0 0 40px -8px rgba(251, 191, 36, 0.6);
+}
+
+/* The portfolio button springs in the moment it unlocks */
+@keyframes unlock-spring {
+  0% {
+    transform: scale(0.94);
+  }
+  55% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.unlock-pop {
+  animation: unlock-spring 0.5s var(--ease-out-soft);
+}
+
+/* Soft outer glow around the game viewport */
+.game-frame {
+  box-shadow:
+    0 0 0 1px rgba(236, 72, 153, 0.18),
+    0 18px 60px -18px rgba(168, 85, 247, 0.45);
+}
+
+/* Press feedback tuned for touch */
+.press-dark {
+  transition:
+    transform 0.16s var(--ease-out-soft),
+    filter 0.16s ease;
+}
+
+.press-dark:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .press-dark:hover {
+    filter: brightness(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop,
+  .face,
+  .scan-bar,
+  .blob,
+  .live-dot,
+  .shimmer-text,
+  .scroll-cue span:last-child,
+  .hud-chip,
+  .play-glow,
+  .unlock-pop {
+    animation: none !important;
+  }
+
+  /* The toast still needs its fade-out, just without the movement. */
+  .unlock-toast {
+    animation-name: fade-toast !important;
+  }
+
+  @keyframes fade-toast {
+    0%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .srv {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .tilt-card {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .press-dark {
+    transition: none !important;
+  }
+}
