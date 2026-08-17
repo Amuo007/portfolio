@@ -336,10 +336,10 @@ const softwareEngineeringSequence = [
 
 const CONTRIB_COLORS = [
   "bg-slate-100",
-  "bg-blue-100",
-  "bg-blue-300",
-  "bg-blue-500",
-  "bg-blue-700",
+  "bg-blue-200",
+  "bg-blue-400",
+  "bg-blue-600",
+  "bg-blue-800",
 ];
 
 const MONTH_LABELS = [
