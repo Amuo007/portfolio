@@ -28,13 +28,13 @@ const trackEvent = (category, action, name) => {
 // that the move is obvious.
 const flee = (from) => {
   for (let i = 0; i < 12; i += 1) {
-    const x = 30 + Math.random() * 40;
-    const y = 22 + Math.random() * 56;
+    const x = 26 + Math.random() * 48;
+    const y = 18 + Math.random() * 64;
 
-    if (Math.hypot(x - from.x, y - from.y) > 26) return { x, y };
+    if (Math.hypot(x - from.x, y - from.y) > 30) return { x, y };
   }
 
-  return { x: from.x < 50 ? 70 : 30, y: from.y < 50 ? 74 : 26 };
+  return { x: from.x < 50 ? 72 : 28, y: from.y < 50 ? 76 : 24 };
 };
 
 export default function PortfolioGate({ onDone }) {
@@ -211,7 +211,7 @@ export default function PortfolioGate({ onDone }) {
             }}
             onPointerEnter={dodge}
             onClick={dodge}
-            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-slate-400 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-md sm:px-6 sm:py-3 sm:text-base"
+            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-lg border-2 border-slate-400 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-md sm:px-4 sm:py-2.5 sm:text-sm"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
@@ -223,7 +223,7 @@ export default function PortfolioGate({ onDone }) {
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              className="h-5 w-5 fill-slate-700"
+              className="h-4 w-4 fill-slate-700"
               aria-hidden="true"
             >
               <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z" />
