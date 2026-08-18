@@ -838,7 +838,7 @@ const ContactForm = ({ visitorName = "" }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!message.trim() || status === "sending") return;
+    if (!message.trim() || !email.trim() || status === "sending") return;
 
     setStatus("sending");
     trackEvent("Contact", "Submit", "Contact Form");
@@ -885,7 +885,8 @@ const ContactForm = ({ visitorName = "" }) => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email (optional)"
+          placeholder="Your email"
+          required
           maxLength={320}
           className={inputClasses}
         />
@@ -904,7 +905,7 @@ const ContactForm = ({ visitorName = "" }) => {
       <div className="flex items-center gap-3 flex-wrap">
         <button
           type="submit"
-          disabled={status === "sending" || !message.trim()}
+          disabled={status === "sending" || !message.trim() || !email.trim()}
           className="press bg-slate-900 text-white text-sm font-medium rounded-md px-5 py-2 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === "sending" ? "Sending..." : "Send Message"}
