@@ -817,6 +817,105 @@ const CopyEmailButton = () => {
   );
 };
 
+const CONTACT_WEBHOOK_URL =
+  "https://n8n.quite-home.com/webhook/portfolio-contact";
+
+const ContactForm = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("idle");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!message.trim() || status === "sending") return;
+
+    setStatus("sending");
+    trackEvent("Contact", "Submit", "Contact Form");
+
+    try {
+      const res = await fetch(CONTACT_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+        }),
+      });
+
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
+      setStatus("sent");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  const inputClasses =
+    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400";
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-6 pt-6 border-t border-gray-200">
+      <h3 className="text-lg font-bold text-gray-900 mb-3">Send a Message</h3>
+
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          maxLength={200}
+          className={inputClasses}
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email (optional)"
+          maxLength={320}
+          className={inputClasses}
+        />
+      </div>
+
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Your message"
+        required
+        rows={4}
+        maxLength={4000}
+        className={`${inputClasses} resize-y mb-3`}
+      />
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="submit"
+          disabled={status === "sending" || !message.trim()}
+          className="press bg-slate-900 text-white text-sm font-medium rounded-md px-5 py-2 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {status === "sending" ? "Sending..." : "Send Message"}
+        </button>
+
+        {status === "sent" && (
+          <span className="text-sm text-green-700">
+            Thanks! Your message has been sent.
+          </span>
+        )}
+        {status === "error" && (
+          <span className="text-sm text-red-600">
+            Something went wrong. Please email me instead.
+          </span>
+        )}
+      </div>
+    </form>
+  );
+};
+
 // Floating button that appears after scrolling down a bit.
 const BackToTop = () => {
   const [shown, setShown] = useState(false);
@@ -2166,6 +2265,8 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            <ContactForm />
           </Reveal>
         </section>
       </main>
