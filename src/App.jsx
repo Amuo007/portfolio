@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import PortfolioGate, { VISITOR_NAME_KEY } from "./PortfolioGate";
+
 // Bundled locally by Vite — faster and more reliable than hotlinking
 // the images from raw.githubusercontent.com.
 import profileImg from "../profile.jpeg";
@@ -820,8 +822,15 @@ const CopyEmailButton = () => {
 const CONTACT_WEBHOOK_URL =
   "https://n8n.quite-home.com/webhook/portfolio-contact";
 
-const ContactForm = () => {
-  const [name, setName] = useState("");
+const ContactForm = ({ visitorName = "" }) => {
+  // Visitors who introduced themselves at the gate get their name prefilled.
+  const [name, setName] = useState(visitorName);
+
+  useEffect(() => {
+    if (visitorName) {
+      setName((current) => current || visitorName);
+    }
+  }, [visitorName]);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle");
@@ -1164,6 +1173,13 @@ export default function App() {
   const [loadingReadme, setLoadingReadme] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [visitorName, setVisitorName] = useState(() => {
+    try {
+      return localStorage.getItem(VISITOR_NAME_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const [languageFilter, setLanguageFilter] = useState("All");
   const progressRef = useRef(null);
   const viewedSectionsRef = useRef(new Set());
@@ -1556,6 +1572,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f7f7f8] text-gray-900">
+      {!visitorName && <PortfolioGate onDone={setVisitorName} />}
       <header
         className={`bg-white/95 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-200 ${
           scrolled ? "shadow-sm" : ""
@@ -2266,7 +2283,7 @@ export default function App() {
               </div>
             </div>
 
-            <ContactForm />
+            <ContactForm visitorName={visitorName} />
           </Reveal>
         </section>
       </main>
