@@ -305,13 +305,14 @@ const certifications = [
     title: "iOS & Swift - The Complete iOS App Development Bootcamp",
     issuer: "Udemy",
     issued: "Dec 2023",
+    url: "https://www.udemy.com/certificate/UC-4e227d89-702f-4b34-8744-7c344400be2c/",
     logo: "udemy",
   },
   {
     title: "The Complete Full-Stack Web Development Bootcamp",
     issuer: "Udemy",
     issued: "May 2022",
-    url: "https://www.udemy.com/certificate/UC-4e227d89-702f-4b34-8744-7c344400be2c/",
+    url: "https://www.udemy.com/certificate/UC-9795b6a6-a6c5-44f6-b209-c64477acb094/",
     logo: "udemy",
   },
   {
