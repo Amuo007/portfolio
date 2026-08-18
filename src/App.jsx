@@ -280,15 +280,25 @@ const certifications = [
     },
   },
   {
+    title: "UR2PhD Undergraduate Research Training Course Participant",
+    issuer: "Computing Research Association",
+    issued: "May 2026",
+    credentialId: "93052220441647",
+    url: "https://verified.sertifier.com/en/verify/93052220441647/",
+    logo: "cra",
+  },
+  {
     title: "Complete Data Science & Machine Learning Bootcamp",
     issuer: "Udemy",
     issued: "Jan 2022",
+    url: "https://www.udemy.com/certificate/UC-16adf0ce-0a97-42f9-8e71-0be56cf012af/",
     logo: "udemy",
   },
   {
     title: "TensorFlow 2: Deep Learning & Artificial Intelligence",
     issuer: "Udemy",
     issued: "May 2024",
+    url: "https://www.udemy.com/certificate/UC-32ba4fb4-213d-4ca6-a23b-302364d25043/",
     logo: "udemy",
   },
   {
@@ -301,6 +311,7 @@ const certifications = [
     title: "The Complete Full-Stack Web Development Bootcamp",
     issuer: "Udemy",
     issued: "May 2022",
+    url: "https://www.udemy.com/certificate/UC-4e227d89-702f-4b34-8744-7c344400be2c/",
     logo: "udemy",
   },
   {
@@ -308,6 +319,7 @@ const certifications = [
     issuer: "Forage",
     issued: "Feb 2025",
     credentialId: "69W4vPnb6zwW6gq75",
+    url: "https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/j43dGscQHtJJ57N54/a77WE3de8qrxWferQ_j43dGscQHtJJ57N54_u8gzLifQB6eWfcFyL_1739818180329_completion_certificate.pdf",
     logo: "forage",
   },
 ];
@@ -761,6 +773,17 @@ const ForageLogo = () => (
   />
 );
 
+const CraLogo = () => (
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill="#334155"
+    aria-hidden="true"
+  >
+    <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z" />
+  </svg>
+);
+
 const CertificationLogo = ({ provider }) => (
   <span
     className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
@@ -769,6 +792,7 @@ const CertificationLogo = ({ provider }) => (
     {provider === "google" && <GoogleLogo />}
     {provider === "udemy" && <UdemyLogo />}
     {provider === "forage" && <ForageLogo />}
+    {provider === "cra" && <CraLogo />}
   </span>
 );
 
@@ -2180,6 +2204,20 @@ export default function App() {
                           <p className="mt-1 text-sm text-gray-500">
                             Credential ID: {cert.credentialId}
                           </p>
+                        )}
+
+                        {cert.url && (
+                          <a
+                            href={cert.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() =>
+                              trackEvent("Certifications", "Click", cert.title)
+                            }
+                            className="mt-1 inline-block text-sm text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                          >
+                            View credential ↗
+                          </a>
                         )}
                       </div>
                     </div>
