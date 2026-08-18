@@ -93,6 +93,12 @@ export default function PortfolioGate({ onDone }) {
     return () => arena.removeEventListener("pointermove", onMove);
   }, [dodge]);
 
+  // One impression event per showing, so entries can be compared
+  // against how many visitors actually met the gate.
+  useEffect(() => {
+    trackEvent("Main Gate", "Shown");
+  }, []);
+
   // Keep the page itself from scrolling while the gate is up.
   useEffect(() => {
     const previous = document.body.style.overflow;

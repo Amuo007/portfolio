@@ -881,11 +881,13 @@ const ContactForm = ({ visitorName = "" }) => {
 
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
+      trackEvent("Contact", "Submit Success", "Contact Form");
       setStatus("sent");
       setName("");
       setEmail("");
       setMessage("");
     } catch {
+      trackEvent("Contact", "Submit Error", "Contact Form");
       setStatus("error");
     }
   };
