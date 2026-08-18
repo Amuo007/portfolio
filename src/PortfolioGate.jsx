@@ -142,7 +142,7 @@ export default function PortfolioGate({ onDone }) {
         leaving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-2xl sm:max-w-md">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -197,7 +197,7 @@ export default function PortfolioGate({ onDone }) {
             on any attempt to press it, so a name is the only way through. */}
         <div
           ref={arenaRef}
-          className="relative mt-3 h-32 select-none"
+          className="relative mt-3 h-28 select-none sm:h-48"
           style={{ touchAction: "none" }}
         >
           <button
@@ -211,11 +211,12 @@ export default function PortfolioGate({ onDone }) {
             }}
             onPointerEnter={dodge}
             onClick={dodge}
-            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-slate-400 bg-white px-6 py-3 text-base font-bold text-slate-800 shadow-md"
+            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-slate-400 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-md sm:px-6 sm:py-3 sm:text-base"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              transition: "left 180ms ease-out, top 180ms ease-out",
+              transition:
+                "left 260ms cubic-bezier(0.33, 1, 0.68, 1), top 260ms cubic-bezier(0.33, 1, 0.68, 1)",
             }}
           >
             Skip introductions
