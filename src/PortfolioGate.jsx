@@ -28,13 +28,13 @@ const trackEvent = (category, action, name) => {
 // that the move is obvious.
 const flee = (from) => {
   for (let i = 0; i < 12; i += 1) {
-    const x = 14 + Math.random() * 72;
-    const y = 20 + Math.random() * 60;
+    const x = 30 + Math.random() * 40;
+    const y = 22 + Math.random() * 56;
 
-    if (Math.hypot(x - from.x, y - from.y) > 34) return { x, y };
+    if (Math.hypot(x - from.x, y - from.y) > 26) return { x, y };
   }
 
-  return { x: 100 - from.x, y: 100 - from.y };
+  return { x: from.x < 50 ? 70 : 30, y: from.y < 50 ? 74 : 26 };
 };
 
 export default function PortfolioGate({ onDone }) {
@@ -143,7 +143,16 @@ export default function PortfolioGate({ onDone }) {
       }`}
     >
       <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-2xl">
-        <p className="text-5xl">🤝</p>
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            className="h-9 w-9 fill-slate-700"
+            aria-hidden="true"
+          >
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+        </div>
 
         <h2 className="mt-3 text-2xl font-bold leading-tight text-gray-900">
           Before you proceed — a quick formality.
@@ -188,7 +197,7 @@ export default function PortfolioGate({ onDone }) {
             on any attempt to press it, so a name is the only way through. */}
         <div
           ref={arenaRef}
-          className="relative mt-3 h-28 select-none"
+          className="relative mt-3 h-32 select-none"
           style={{ touchAction: "none" }}
         >
           <button
@@ -202,14 +211,22 @@ export default function PortfolioGate({ onDone }) {
             }}
             onPointerEnter={dodge}
             onClick={dodge}
-            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl border border-gray-300 bg-gray-50 px-5 py-2.5 text-sm font-semibold text-gray-600 shadow-sm"
+            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl border-2 border-slate-400 bg-white px-6 py-3 text-base font-bold text-slate-800 shadow-md"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
               transition: "left 180ms ease-out, top 180ms ease-out",
             }}
           >
-            Skip introductions 🏃
+            Skip introductions
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="h-5 w-5 fill-slate-700"
+              aria-hidden="true"
+            >
+              <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z" />
+            </svg>
           </button>
         </div>
 
