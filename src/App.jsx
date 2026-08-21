@@ -240,12 +240,49 @@ const experiences = [
 ];
 
 const skills = {
-  Languages: ["JavaScript", "Python", "Java", "Swift", "C++", "C#"],
+  Languages: ["JavaScript", "Python", "Java", "Swift", "C++", "C#", "SQL"],
   Frontend: ["React", "HTML", "CSS", "Tailwind CSS"],
-  Backend: ["Node.js", "Express.js", "REST APIs"],
-  "Mobile / AR": ["iOS", "SwiftUI", "Android", "Unity", "Meta Quest 3", "ARKit"],
-  "AI / Research": ["RAG", "Embeddings", "Machine Learning", "TensorFlow"],
-  Tools: ["Git", "GitHub", "Docker", "Firebase", "MongoDB", "PostgreSQL"],
+  Backend: [
+    "Node.js",
+    "Express.js",
+    "Django",
+    "REST APIs",
+    "WebSocket",
+    "WebRTC",
+  ],
+  Databases: ["PostgreSQL", "MongoDB", "SQLite", "Firebase", "Core Data"],
+  "Mobile / AR": [
+    "iOS",
+    "SwiftUI",
+    "UIKit",
+    "Android",
+    "Unity",
+    "Meta Quest 3",
+    "ARKit",
+    "SceneKit",
+  ],
+  "AI / Research": [
+    "RAG",
+    "Embeddings",
+    "Large Language Models",
+    "Local LLMs",
+    "Prompt Engineering",
+    "AI Agents",
+    "Machine Learning",
+    "TensorFlow",
+    "OpenAI API",
+    "Anthropic Claude",
+  ],
+  Tools: [
+    "Git",
+    "GitHub",
+    "Docker",
+    "Microsoft Azure",
+    "Xcode",
+    "LaTeX",
+    "Test-Driven Development",
+    "Agile",
+  ],
 };
 
 const heroHighlights = [
