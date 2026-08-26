@@ -18,9 +18,15 @@ const TAUNTS = [
   "May I suggest the name field? It's significantly slower.",
 ];
 
-const trackEvent = (category, action, name) => {
+const trackEvent = (category, action, name, value) => {
   if (typeof window !== "undefined" && window._paq) {
-    window._paq.push(["trackEvent", category, action, name]);
+    const event = ["trackEvent", category, action, name];
+
+    if (Number.isFinite(value)) {
+      event.push(value);
+    }
+
+    window._paq.push(event);
   }
 };
 
@@ -46,6 +52,11 @@ export default function PortfolioGate({ onDone }) {
   const arenaRef = useRef(null);
   const skipRef = useRef(null);
   const lastCountedRef = useRef(0);
+  const mountedAtRef = useRef(Date.now());
+  const outcomeTrackedRef = useRef(false);
+  const dodgesRef = useRef(0);
+
+  dodgesRef.current = dodges;
 
   // Always reposition, but only advance the taunt every so often — a
   // single press fires both pointerdown and click, and sweeping the
@@ -94,9 +105,32 @@ export default function PortfolioGate({ onDone }) {
   }, [dodge]);
 
   // One impression event per showing, so entries can be compared
-  // against how many visitors actually met the gate.
+  // against how many visitors actually met the gate. Leaving with the
+  // gate still up counts as abandonment — the cost of the joke.
   useEffect(() => {
     trackEvent("Main Gate", "Shown");
+
+    const trackAbandoned = () => {
+      if (outcomeTrackedRef.current) return;
+
+      outcomeTrackedRef.current = true;
+
+      const seconds = Math.round((Date.now() - mountedAtRef.current) / 1000);
+
+      trackEvent(
+        "Main Gate",
+        "Abandoned",
+        `after-${dodgesRef.current}-dodges`,
+        seconds
+      );
+    };
+
+    // pagehide only: a tab switch isn't abandonment, actually leaving is.
+    window.addEventListener("pagehide", trackAbandoned);
+
+    return () => {
+      window.removeEventListener("pagehide", trackAbandoned);
+    };
   }, []);
 
   // Keep the page itself from scrolling while the gate is up.
@@ -118,7 +152,17 @@ export default function PortfolioGate({ onDone }) {
 
     if (!canSubmit || leaving) return;
 
-    trackEvent("Main Gate", "Name Entered", `after-${dodges}-dodges`);
+    outcomeTrackedRef.current = true;
+    trackEvent(
+      "Main Gate",
+      "Name Entered",
+      `after-${dodges}-dodges`,
+      Math.round((Date.now() - mountedAtRef.current) / 1000)
+    );
+
+    if (typeof window !== "undefined" && window._paq) {
+      window._paq.push(["setUserId", trimmed]);
+    }
 
     try {
       localStorage.setItem(VISITOR_NAME_KEY, trimmed);
@@ -148,7 +192,31 @@ export default function PortfolioGate({ onDone }) {
         leaving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-2xl sm:max-w-md">
+      <div
+        className="gate-card w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-2xl sm:max-w-md"
+        onKeyDown={(event) => {
+          // Keep Tab inside the dialog: the page behind is blocked anyway.
+          if (event.key !== "Tab") return;
+
+          const card = event.currentTarget;
+          const stops = card.querySelectorAll(
+            "input, button[type=submit]"
+          );
+
+          if (stops.length === 0) return;
+
+          const first = stops[0];
+          const last = stops[stops.length - 1];
+
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }}
+      >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -183,7 +251,8 @@ export default function PortfolioGate({ onDone }) {
             autoComplete="off"
             spellCheck="false"
             enterKeyHint="go"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-lg font-semibold text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            autoFocus
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-lg font-semibold text-gray-900 placeholder:font-normal placeholder:text-gray-400 transition duration-200 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400"
           />
 
           <button
@@ -191,7 +260,7 @@ export default function PortfolioGate({ onDone }) {
             disabled={!canSubmit}
             className={`press mt-3 w-full rounded-xl px-5 py-3.5 font-bold text-white ${
               canSubmit
-                ? "bg-slate-900 hover:bg-slate-700"
+                ? "bg-gray-900 hover:bg-gray-800"
                 : "cursor-not-allowed bg-gray-300"
             }`}
           >
@@ -217,12 +286,10 @@ export default function PortfolioGate({ onDone }) {
             }}
             onPointerEnter={dodge}
             onClick={dodge}
-            className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-lg border-2 border-slate-400 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-md sm:px-4 sm:py-2.5 sm:text-sm"
+            className="gate-skip absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-lg border-2 border-slate-400 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-md sm:px-4 sm:py-2.5 sm:text-sm"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              transition:
-                "left 260ms cubic-bezier(0.33, 1, 0.68, 1), top 260ms cubic-bezier(0.33, 1, 0.68, 1)",
             }}
           >
             Skip introductions
@@ -237,7 +304,7 @@ export default function PortfolioGate({ onDone }) {
           </button>
         </div>
 
-        <p className="min-h-5 text-xs text-gray-400">
+        <p className="min-h-5 text-xs text-gray-500">
           {dodges === 0
             ? "or skip the formality — if you can"
             : TAUNTS[Math.min(dodges - 1, TAUNTS.length - 1)]}

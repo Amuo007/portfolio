@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import PortfolioGate, { VISITOR_NAME_KEY } from "./PortfolioGate";
 
@@ -54,8 +54,10 @@ const trackEvent = (category, action, name, value) => {
   }
 };
 
+// Outbound clicks already fire per-link semantic events; this only feeds
+// Matomo's native Outlinks report, so each click counts exactly once there.
 const trackLink = (url, label) => {
-  trackEvent("Link", "Outbound Click", label);
+  void label;
 
   if (
     typeof window !== "undefined" &&
@@ -151,6 +153,7 @@ const renderMarkdown = (md) => {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
     .replace(
       /^### (.+)$/gm,
       '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>'
@@ -168,9 +171,12 @@ const renderMarkdown = (md) => {
       /`([^`]+)`/g,
       '<code class="bg-gray-100 text-slate-800 px-1 rounded text-sm font-mono">$1</code>'
     )
-    .replace(
-      MARKDOWN_LINK_REGEX,
-      '<a href="$2" target="_blank" rel="noreferrer" class="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950">$1</a>'
+    .replace(MARKDOWN_LINK_REGEX, (match, text, url) =>
+      // Only linkify http(s) targets so javascript: URLs and attribute
+      // breakouts in README content can never reach the DOM as links.
+      /^https?:\/\//i.test(url)
+        ? `<a href="${url}" target="_blank" rel="noreferrer" class="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500">${text}</a>`
+        : text
     )
     .replace(
       /^\s*[-*] (.+)$/gm,
@@ -444,6 +450,14 @@ const ContributionGraph = () => {
         if (entries.some((entry) => entry.isIntersecting)) {
           setPlay(true);
           observer.disconnect();
+
+          // The graph is third-party social proof — worth knowing it was seen.
+          trackEvent(
+            "Projects",
+            "Contributions Viewed",
+            "GitHub Graph",
+            contribData?.total?.lastYear ?? 0
+          );
         }
       },
       { threshold: 0.2 }
@@ -476,6 +490,13 @@ const ContributionGraph = () => {
         console.error("Failed to fetch contributions:", err);
 
         if (!cancelled) {
+          // The graph hides itself on failure; without this the owner
+          // would never learn visitors stopped seeing it.
+          trackEvent(
+            "Projects",
+            "Contributions Error",
+            String(err?.message || "fetch failed")
+          );
           setFailed(true);
         }
       }
@@ -658,6 +679,7 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 const CountUp = ({ value, duration = 1200 }) => {
   const ref = useRef(null);
   const started = useRef(false);
+  const rafRef = useRef(0);
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
@@ -690,17 +712,20 @@ const CountUp = ({ value, duration = 1200 }) => {
 
           setDisplay(Math.round(eased * value));
 
-          if (t < 1) requestAnimationFrame(tick);
+          if (t < 1) rafRef.current = requestAnimationFrame(tick);
         };
 
-        requestAnimationFrame(tick);
+        rafRef.current = requestAnimationFrame(tick);
       },
       { threshold: 0.5 }
     );
 
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [value, duration]);
 
   return <span ref={ref}>{display.toLocaleString()}</span>;
@@ -757,7 +782,7 @@ const LanguageBar = ({ repos }) => {
               style={{ backgroundColor: getLanguageColor(language) }}
             />
             {language}
-            <span className="text-gray-400">{count}</span>
+            <span className="text-gray-500">{count}</span>
           </span>
         ))}
       </div>
@@ -824,7 +849,7 @@ const CraLogo = () => (
 
 const CertificationLogo = ({ provider }) => (
   <span
-    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white shadow-sm"
     aria-hidden="true"
   >
     {provider === "google" && <GoogleLogo />}
@@ -837,6 +862,9 @@ const CertificationLogo = ({ provider }) => (
 // Copies the email address and briefly confirms it.
 const CopyEmailButton = () => {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef(0);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const copyEmail = async () => {
     trackEvent("Contact", "Click", "Copy Email");
@@ -863,14 +891,15 @@ const CopyEmailButton = () => {
     }
 
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <button
       type="button"
       onClick={copyEmail}
-      className={`press text-xs border rounded-full px-2.5 py-0.5 align-middle ${
+      className={`press inline-flex items-center justify-center min-w-[4.75rem] text-xs border rounded-full px-2.5 py-0.5 align-middle ${
         copied
           ? "text-green-700 border-green-300 bg-green-50"
           : "text-gray-600 border-gray-300 bg-white hover:text-gray-950 hover:border-gray-400"
@@ -896,6 +925,15 @@ const ContactForm = ({ visitorName = "" }) => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle");
+  const startedRef = useRef(false);
+
+  // One-time event on first interaction so form abandonment is measurable.
+  const handleFormStart = () => {
+    if (startedRef.current) return;
+
+    startedRef.current = true;
+    trackEvent("Contact", "Form Started", "Contact Form");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -930,7 +968,7 @@ const ContactForm = ({ visitorName = "" }) => {
   };
 
   const inputClasses =
-    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400";
+    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white transition duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400";
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 pt-6 border-t border-gray-200">
@@ -941,7 +979,9 @@ const ContactForm = ({ visitorName = "" }) => {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onFocus={handleFormStart}
           placeholder="Your name"
+          aria-label="Your name"
           maxLength={200}
           className={inputClasses}
         />
@@ -949,7 +989,9 @@ const ContactForm = ({ visitorName = "" }) => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onFocus={handleFormStart}
           placeholder="Your email"
+          aria-label="Your email"
           required
           maxLength={320}
           className={inputClasses}
@@ -959,7 +1001,9 @@ const ContactForm = ({ visitorName = "" }) => {
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onFocus={handleFormStart}
         placeholder="Your message"
+        aria-label="Your message"
         required
         rows={4}
         maxLength={4000}
@@ -970,21 +1014,24 @@ const ContactForm = ({ visitorName = "" }) => {
         <button
           type="submit"
           disabled={status === "sending" || !message.trim() || !email.trim()}
-          className="press bg-slate-900 text-white text-sm font-medium rounded-md px-5 py-2 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="press bg-gray-900 text-white text-sm font-medium rounded-md px-5 py-2 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === "sending" ? "Sending..." : "Send Message"}
         </button>
 
-        {status === "sent" && (
-          <span className="text-sm text-green-700">
-            Thanks! Your message has been sent.
-          </span>
-        )}
-        {status === "error" && (
-          <span className="text-sm text-red-600">
-            Something went wrong. Please email me instead.
-          </span>
-        )}
+        {/* Persistent live region so assistive tech announces the outcome */}
+        <span role="status" aria-live="polite" className="text-sm">
+          {status === "sent" && (
+            <span className="text-green-700">
+              Thanks! Your message has been sent.
+            </span>
+          )}
+          {status === "error" && (
+            <span className="text-red-600">
+              Something went wrong. Please email me instead.
+            </span>
+          )}
+        </span>
       </div>
     </form>
   );
@@ -1010,7 +1057,12 @@ const BackToTop = () => {
       title="Back to top"
       onClick={() => {
         trackEvent("Navigation", "Click", "Back to Top");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        const reduceMotion =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
       }}
       className={`back-to-top ${shown ? "is-shown" : ""}`}
     >
@@ -1048,7 +1100,7 @@ const NavLink = ({ href, label, active }) => (
 const SkillTag = ({ skill, index = 0 }) => (
   <span
     style={{ "--stagger-delay": `${Math.min(index * 40, 400)}ms` }}
-    className="stagger-item bg-white text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-xs font-medium"
+    className="stagger-item bg-white text-gray-700 border border-gray-200 px-3 py-1 rounded-full text-xs font-medium"
   >
     {skill}
   </span>
@@ -1090,17 +1142,17 @@ const ProjectOverview = ({ repos, languages }) => {
         <div
           key={stat.label}
           style={{ "--stagger-delay": `${index * 70}ms` }}
-          className="stagger-item bg-white border border-slate-200 rounded-lg p-4 shadow-sm"
+          className="stagger-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
             {stat.label}
           </p>
 
-          <p className="mt-1 text-2xl font-bold text-slate-950">
+          <p className="mt-1 text-2xl font-bold text-gray-950">
             {stat.value}
           </p>
 
-          <p className="mt-1 text-xs text-slate-500">{stat.detail}</p>
+          <p className="mt-1 text-xs text-gray-500">{stat.detail}</p>
         </div>
       ))}
     </Reveal>
@@ -1111,6 +1163,9 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
   const readme = details?.readme;
   const description = repo.description || details?.summary;
   const summaryLoading = !repo.description && details === undefined;
+
+  // READMEs can be large; parse once per README instead of on every render.
+  const readmeHtml = useMemo(() => renderMarkdown(readme), [readme]);
 
   const handleRepositoryClick = () => {
     trackEvent("Projects", "Open Repository", repo.name);
@@ -1136,7 +1191,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               target="_blank"
               rel="noreferrer"
               onClick={handleRepositoryClick}
-              className="text-xl font-bold text-gray-900 hover:text-gray-600"
+              className="text-xl font-bold text-gray-900 transition-colors hover:underline decoration-gray-300 underline-offset-4"
             >
               {repo.name}
             </a>
@@ -1185,7 +1240,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
               {description}
             </p>
           ) : (
-            <p className="text-gray-400 text-sm italic">
+            <p className="text-gray-500 text-sm italic">
               No description available
             </p>
           )}
@@ -1207,7 +1262,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <button
           type="button"
           onClick={handleReadmeClick}
-          className="text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+          className="text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950 hover:decoration-slate-500"
         >
           {isLoading
             ? "Loading README..."
@@ -1221,7 +1276,7 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
         <div className="panel-in border-t border-gray-200 bg-gray-50 px-6 py-5">
           <div
             className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(readme) }}
+            dangerouslySetInnerHTML={{ __html: readmeHtml }}
           />
         </div>
       )}
@@ -1250,6 +1305,8 @@ export default function App() {
   const viewedSectionsRef = useRef(new Set());
   const scrollDepthsRef = useRef(new Set());
   const sessionStartedAtRef = useRef(Date.now());
+  const repoRequestIdRef = useRef(0);
+  const summaryInFlightRef = useRef(new Set());
 
   useEffect(() => {
     fetchRepos();
@@ -1259,6 +1316,12 @@ export default function App() {
 
   useEffect(() => {
     trackEvent("Engagement", "Page Ready", "Portfolio");
+
+    // Distinguish targeted landings (resume/email #section links) from
+    // organic top-of-page entries.
+    if (window.location.hash) {
+      trackEvent("Navigation", "Deep Link", window.location.hash);
+    }
 
     const depthMarks = [25, 50, 75, 90];
     const trackedDepths = scrollDepthsRef.current;
@@ -1375,11 +1438,43 @@ export default function App() {
 
     const inView = new Set();
 
+    // Dwell time per section: the narrow rootMargin band means "actively
+    // centered on screen", which is the attention signal worth measuring.
+    const enteredAt = new Map();
+
+    const reportDwell = (id, clear = true) => {
+      const since = enteredAt.get(id);
+
+      if (since === undefined) return;
+
+      if (clear) enteredAt.delete(id);
+
+      const seconds = Math.round((Date.now() - since) / 1000);
+
+      if (seconds >= 2) {
+        trackEvent("Engagement", "Section Time", id, seconds);
+      }
+    };
+
+    const flushDwell = () => {
+      // Report open sections without losing them; if the visitor returns,
+      // time starts counting again from now.
+      enteredAt.forEach((since, id) => {
+        reportDwell(id, false);
+        enteredAt.set(id, Date.now());
+      });
+    };
+
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") flushDwell();
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             inView.add(entry.target.id);
+            enteredAt.set(entry.target.id, Date.now());
 
             if (!viewedSectionsRef.current.has(entry.target.id)) {
               viewedSectionsRef.current.add(entry.target.id);
@@ -1387,6 +1482,7 @@ export default function App() {
             }
           } else {
             inView.delete(entry.target.id);
+            reportDwell(entry.target.id);
           }
         });
 
@@ -1396,12 +1492,26 @@ export default function App() {
     );
 
     sections.forEach((section) => observer.observe(section));
+    document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("pagehide", flushDwell);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("pagehide", flushDwell);
+    };
   }, []);
 
   const applyRepos = (list) => {
     setRepos(list);
+
+    // A refresh can remove the language the filter points at; fall back to
+    // All rather than stranding the visitor on an empty, chipless list.
+    setLanguageFilter((current) =>
+      current !== "All" && !list.some((repo) => repo.language === current)
+        ? "All"
+        : current
+    );
 
     list.forEach((repo) => {
       if (!repo.description) {
@@ -1411,6 +1521,9 @@ export default function App() {
   };
 
   const fetchRepos = async (force = false) => {
+    // Overlapping refreshes race; only the latest request may apply data.
+    const requestId = ++repoRequestIdRef.current;
+
     setLoadingRepos(true);
     setRepoError(false);
 
@@ -1439,6 +1552,8 @@ export default function App() {
 
       const data = await res.json();
 
+      if (requestId !== repoRequestIdRef.current) return;
+
       const filtered = data
         .filter((repo) => !repo.fork && !EXCLUDED_REPOS.includes(repo.name))
         .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
@@ -1455,6 +1570,8 @@ export default function App() {
     } catch (err) {
       console.error("Failed to fetch repos:", err);
 
+      if (requestId !== repoRequestIdRef.current) return;
+
       if (cached && cached.repos && cached.repos.length > 0) {
         // Rate-limited or offline — show the last good data instead of an error.
         trackEvent(
@@ -1469,11 +1586,16 @@ export default function App() {
         setRepoError(true);
       }
     } finally {
-      setLoadingRepos(false);
+      if (requestId === repoRequestIdRef.current) {
+        setLoadingRepos(false);
+      }
     }
   };
 
   const fetchReadmeSummary = async (repoName) => {
+    // Refresh re-runs applyRepos; don't re-fire a fetch already in flight.
+    if (summaryInFlightRef.current.has(repoName)) return;
+
     const cache = readCache(README_CACHE_KEY);
 
     if (
@@ -1496,14 +1618,19 @@ export default function App() {
     }
 
     const saveSummary = (summary) => {
-      const current = readCache(README_CACHE_KEY) || {
-        ts: Date.now(),
-        items: {},
-      };
+      // An expired cache must restart with a fresh timestamp — writing new
+      // items under the old ts would keep the whole cache permanently stale.
+      const cached = readCache(README_CACHE_KEY);
+      const current =
+        cached && cached.items && Date.now() - cached.ts < README_CACHE_TTL
+          ? cached
+          : { ts: Date.now(), items: {} };
 
       current.items[repoName] = summary;
       writeCache(README_CACHE_KEY, current);
     };
+
+    summaryInFlightRef.current.add(repoName);
 
     try {
       const res = await fetch(
@@ -1540,6 +1667,16 @@ export default function App() {
             summary: null,
           },
         }));
+      } else {
+        // Rate-limited (403) or transient: settle the card without caching
+        // so the description skeleton doesn't pulse forever.
+        setRepoDetails((prev) => ({
+          ...prev,
+          [repoName]: {
+            ...prev[repoName],
+            summary: null,
+          },
+        }));
       }
     } catch {
       setRepoDetails((prev) => ({
@@ -1550,6 +1687,8 @@ export default function App() {
           summary: null,
         },
       }));
+    } finally {
+      summaryInFlightRef.current.delete(repoName);
     }
   };
 
@@ -1558,6 +1697,9 @@ export default function App() {
       setExpandedRepo(expandedRepo === repoName ? null : repoName);
       return;
     }
+
+    // One README fetch at a time; repeat clicks while loading are no-ops.
+    if (loadingReadme) return;
 
     setLoadingReadme(repoName);
 
@@ -1598,6 +1740,8 @@ export default function App() {
         }));
       }
     } catch {
+      trackEvent("Projects", "README Error", repoName);
+
       setRepoDetails((prev) => ({
         ...prev,
         [repoName]: {
@@ -1739,7 +1883,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Hero", "Click", "View Projects")
                     }
-                    className="press w-full bg-gray-950 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-gray-800 font-medium"
+                    className="press w-full bg-gray-900 text-center text-white px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-gray-800 font-medium"
                   >
                     View Projects
                   </a>
@@ -1896,7 +2040,7 @@ export default function App() {
                         </p>
                       </div>
 
-                      <span className="text-sm bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1 rounded-full w-fit">
+                      <span className="text-sm bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1 rounded-full w-fit">
                         {exp.dates}
                       </span>
                     </div>
@@ -1938,7 +2082,7 @@ export default function App() {
                 onClick={() =>
                   trackEvent("Projects", "Click", "GitHub Username")
                 }
-                className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
               >
                 @{GITHUB_USERNAME}
               </a>
@@ -1974,6 +2118,7 @@ export default function App() {
                   trackEvent("Projects", "Filter", "All");
                   setLanguageFilter("All");
                 }}
+                aria-pressed={languageFilter === "All"}
                 className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                   languageFilter === "All"
                     ? "bg-gray-950 text-white border-gray-950"
@@ -1991,6 +2136,7 @@ export default function App() {
                     trackEvent("Projects", "Filter", language);
                     setLanguageFilter(language);
                   }}
+                  aria-pressed={languageFilter === language}
                   className={`press text-xs font-medium px-3 py-1.5 rounded-full border ${
                     languageFilter === language
                       ? "bg-gray-950 text-white border-gray-950"
@@ -2008,7 +2154,7 @@ export default function App() {
               {[1, 2, 3].map((item) => (
                 <div
                   key={item}
-                  className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse"
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 animate-pulse"
                 >
                   <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
                   <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
@@ -2017,7 +2163,7 @@ export default function App() {
               ))}
             </div>
           ) : repoError ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-10 text-center">
               <p className="text-gray-600 mb-4">
                 Couldn't load repositories from GitHub right now.
               </p>
@@ -2033,12 +2179,12 @@ export default function App() {
               </button>
             </div>
           ) : repos.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-10 text-center text-gray-500">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-10 text-center text-gray-500">
               No repositories found.
             </div>
           ) : (
             filteredRepos.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-10 text-center text-gray-500">
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-10 text-center text-gray-500">
                 No repositories match this filter.
               </div>
             ) : (
@@ -2254,7 +2400,7 @@ export default function App() {
                             onClick={() =>
                               trackEvent("Certifications", "Click", cert.title)
                             }
-                            className="mt-1 inline-block text-sm text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                            className="mt-1 inline-block text-sm text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                           >
                             View credential ↗
                           </a>
@@ -2297,7 +2443,7 @@ export default function App() {
                           "Contact Section Email"
                         )
                       }
-                      className="break-all text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                      className="break-all text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                     >
                       Amrinderbalharjob@gmail.com
                     </a>
@@ -2311,7 +2457,7 @@ export default function App() {
                       onClick={() =>
                         trackEvent("Contact", "Click", "Phone Number")
                       }
-                      className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                      className="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                     >
                       (832) 263-4489
                     </a>
@@ -2332,7 +2478,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact GitHub")
                     }
-                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                   >
                     GitHub
                   </a>
@@ -2344,7 +2490,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Contact LinkedIn")
                     }
-                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                   >
                     LinkedIn
                   </a>
@@ -2354,7 +2500,7 @@ export default function App() {
                     onClick={() =>
                       trackEvent("Contact", "Click", "Email Me Link")
                     }
-                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
+                    className="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500"
                   >
                     Email Me
                   </a>
