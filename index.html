@@ -74,9 +74,16 @@
         display: none;
       }
 
-      /* Keep anchored sections from hiding under the sticky header */
+      /* Keep anchored sections from hiding under the sticky header.
+         The mobile header wraps to two rows, so it needs more clearance. */
       section[id] {
-        scroll-margin-top: 5.5rem;
+        scroll-margin-top: 8.5rem;
+      }
+
+      @media (min-width: 768px) {
+        section[id] {
+          scroll-margin-top: 5.5rem;
+        }
       }
 
       :focus-visible {
@@ -173,6 +180,14 @@
       @media (hover: hover) {
         .nav-link:hover::after {
           transform: scaleX(1);
+        }
+      }
+
+      /* NavLink padding widens to px-3 at md; keep the underline aligned */
+      @media (min-width: 768px) {
+        .nav-link::after {
+          left: 0.75rem;
+          right: 0.75rem;
         }
       }
 
@@ -320,6 +335,30 @@
         animation-delay: var(--cell-delay, 0ms);
       }
 
+      /* Name-gate card settles in gently instead of materializing */
+      @keyframes gate-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .gate-card {
+        animation: gate-in 0.32s var(--ease-out-soft) both;
+      }
+
+      /* The gate's runaway skip button glides between dodge positions.
+         Kept in CSS (not inline) so reduced-motion can disable it. */
+      .gate-skip {
+        transition:
+          left 0.26s cubic-bezier(0.33, 1, 0.68, 1),
+          top 0.26s cubic-bezier(0.33, 1, 0.68, 1);
+      }
+
       /* Soft fade for async content (repos, contribution graph) */
       @keyframes fade-in {
         from {
@@ -365,6 +404,14 @@
           scroll-behavior: auto;
         }
 
+        .gate-card {
+          animation: none !important;
+        }
+
+        .gate-skip {
+          transition: none !important;
+        }
+
         .reveal,
         .hero-rise,
         .panel-in,
@@ -401,6 +448,19 @@
     <script>
       var _paq = (window._paq = window._paq || []);
 
+      // Returning visitors who introduced themselves at the name gate keep
+      // their identity across visits in the Matomo visits log.
+      try {
+        var vn = localStorage.getItem("portfolio-visitor-name");
+        if (vn) _paq.push(["setUserId", vn]);
+      } catch (e) {}
+
+      if (location.protocol === "https:") {
+        _paq.push(["setSecureCookie", true]);
+      }
+      _paq.push(["alwaysUseSendBeacon"]);
+      // One-page site: without a heartbeat every visit reads as 0s duration.
+      _paq.push(["enableHeartBeatTimer", 15]);
       _paq.push(["trackPageView"]);
       _paq.push(["enableLinkTracking"]);
 
@@ -420,9 +480,9 @@
       })();
     </script>
     <!-- End Matomo Code -->
-    <script type="module" crossorigin src="/portfolio/assets/main-CnNJgIo2.js"></script>
+    <script type="module" crossorigin src="/portfolio/assets/main-fmV_iqxB.js"></script>
     <link rel="modulepreload" crossorigin href="/portfolio/assets/client-Cd8XwpR4.js">
-    <link rel="stylesheet" crossorigin href="/portfolio/assets/main-CwX2IWOO.css">
+    <link rel="stylesheet" crossorigin href="/portfolio/assets/main-CSuK1Jxr.css">
   </head>
 
   <body>
