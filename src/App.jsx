@@ -1899,6 +1899,25 @@ export default function App() {
                   </a>
 
                   <a
+                    href={`${import.meta.env.BASE_URL}resume.pdf`}
+                    download="Amrinder-Singh-Resume.pdf"
+                    onClick={() =>
+                      trackEvent("Hero", "Click", "Download Resume")
+                    }
+                    className="press inline-flex w-full items-center justify-center gap-1.5 bg-white text-center text-gray-900 border border-gray-300 px-4 sm:w-auto sm:px-5 py-2.5 rounded-lg hover:bg-gray-50"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4 fill-gray-700"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
+                    </svg>
+                    Download Resume
+                  </a>
+
+                  <a
                     href="https://github.com/Amuo007"
                     target="_blank"
                     rel="noreferrer"
