@@ -198,6 +198,22 @@ const formatDate = (dateStr) =>
 
 const experiences = [
   {
+    role: "Automation Engineer Intern",
+    company: "Geometris LP",
+    type: "Internship",
+    dates: "Starting Sep 2026",
+    location: "Houston, TX · On-site",
+    image: null,
+    logo: "G",
+    logoColor: "bg-blue-600",
+    incoming: true,
+    description: [
+      "Returning to Geometris for the fall semester in a new role focused on automation tooling.",
+      "Continuing the internal automation work from the summer internship, with a focus on streamlining production and operations workflows.",
+    ],
+    skills: ["Automation", "React", "Node.js", "Express.js", "MySQL"],
+  },
+  {
     role: "Software Engineer Intern",
     company: "Geometris LP",
     type: "Full-time",
@@ -298,9 +314,9 @@ const skills = {
 
 const heroHighlights = [
   {
-    label: "Latest",
+    label: "Next",
     value: "Geometris LP",
-    detail: "Software Engineer Intern · Summer 2026",
+    detail: "Automation Engineer Intern · Fall 2026",
   },
   {
     label: "Research",
@@ -1895,7 +1911,7 @@ export default function App() {
                   className="hero-rise break-words text-sm font-semibold leading-snug text-red-700 sm:text-base mb-2"
                   style={{ "--rise-delay": "40ms" }}
                 >
-                  <span>Software Engineer Intern</span>
+                  <span>Incoming Automation Engineer Intern</span>
                   <span className="hidden sm:inline"> · </span>
                   <span className="block sm:inline">
                     Computer Science Student
@@ -1921,10 +1937,11 @@ export default function App() {
                   style={{ "--rise-delay": "160ms" }}
                 >
                   Computer Science student at the University of Houston building
-                  full-stack, AI, and AR applications. Spent summer 2026 as a
-                  Software Engineer Intern at Geometris LP building full-stack
-                  internal automation tools. Previously researched offline
-                  search using embeddings and RAG for Internet-in-a-Box.
+                  full-stack, AI, and AR applications. Returning to Geometris LP
+                  this fall as an Automation Engineer Intern after a summer
+                  internship building full-stack internal automation tools.
+                  Previously researched offline search using embeddings and RAG
+                  for Internet-in-a-Box.
                 </p>
 
                 <div
@@ -2110,6 +2127,13 @@ export default function App() {
                         <p className="text-gray-500 text-sm mt-1">
                           {exp.location}
                         </p>
+
+                        {exp.incoming && (
+                          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                            Incoming
+                          </span>
+                        )}
                       </div>
 
                       <span className="text-sm bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1 rounded-full w-fit">
