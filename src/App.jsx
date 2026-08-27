@@ -196,70 +196,82 @@ const formatDate = (dateStr) =>
     month: "short",
   });
 
+// Grouped by company, LinkedIn-style: companies with more than one role
+// render as a single card with the roles stacked on a timeline, newest
+// first.
 const experiences = [
   {
-    role: "Automation Engineer Intern",
     company: "Geometris LP",
-    type: "Internship",
-    dates: "Starting Sep 2026",
     location: "Houston, TX · On-site",
-    image: null,
-    logo: "G",
-    logoColor: "bg-blue-600",
-    incoming: true,
-    description: [
-      "Returning to Geometris for the fall semester in a new role focused on automation tooling.",
-      "Continuing the internal automation work from the summer internship, with a focus on streamlining production and operations workflows.",
-    ],
-    skills: ["Automation", "React", "Node.js", "Express.js", "MySQL"],
-  },
-  {
-    role: "Software Engineer Intern",
-    company: "Geometris LP",
-    type: "Full-time",
-    dates: "May 2026 – Aug 2026",
-    location: "Houston, TX · On-site",
+    dates: "May 2026 – Present",
     image: internImg,
     logo: "G",
     logoColor: "bg-blue-600",
-    description: [
-      "Developed full-stack internal automation tools using React, Node.js, Express, and MySQL to streamline production planning, scheduling, and employee operations.",
-      "Built systems supporting 100+ production orders, automating previously manual workflows and improving operational visibility and production efficiency.",
-      "Designed REST APIs, database architecture, business logic, integrations, and automated workflows with a focus on reliability, scalability, and data accuracy.",
+    roles: [
+      {
+        role: "Automation Engineer Intern",
+        type: "Internship",
+        dates: "Sep 2026 – Present",
+        description: [
+          "Building internal automation tools for production planning, scheduling, and operations during the fall semester.",
+          "Extending the React, Node.js, and MySQL systems from the summer internship, automating previously manual workflows.",
+        ],
+        skills: ["Automation", "React", "Node.js", "Express.js", "MySQL"],
+      },
+      {
+        role: "Software Engineer Intern",
+        type: "Full-time",
+        dates: "May 2026 – Aug 2026",
+        description: [
+          "Developed full-stack internal automation tools using React, Node.js, Express, and MySQL to streamline production planning, scheduling, and employee operations.",
+          "Built systems supporting 100+ production orders, automating previously manual workflows and improving operational visibility and production efficiency.",
+          "Designed REST APIs, database architecture, business logic, integrations, and automated workflows with a focus on reliability, scalability, and data accuracy.",
+        ],
+        skills: ["React", "Node.js", "Express.js", "MySQL", "REST APIs"],
+      },
     ],
-    skills: ["React", "Node.js", "Express.js", "MySQL", "REST APIs"],
   },
   {
-    role: "Undergraduate Student Researcher",
     company: "University of Houston",
-    type: "Full-time",
-    dates: "Jan 2026 – Aug 2026",
     location: "United States · On-site",
+    dates: "Jan 2026 – Aug 2026",
     image: posterImg,
     logo: "UH",
     logoColor: "bg-red-600",
-    description: [
-      "Worked on Internet-in-a-Box and explored ways to improve search using embeddings and retrieval-augmented generation.",
-      "Evaluated IIAB on Android as an offline digital library, measuring CPU, RAM, and page-load times on low-cost and flagship devices via ADB and Chrome remote debugging.",
-      "Presented the results as a research poster at the University of Houston.",
+    roles: [
+      {
+        role: "Undergraduate Student Researcher",
+        type: "Full-time",
+        dates: "Jan 2026 – Aug 2026",
+        description: [
+          "Worked on Internet-in-a-Box and explored ways to improve search using embeddings and retrieval-augmented generation.",
+          "Evaluated IIAB on Android as an offline digital library, measuring CPU, RAM, and page-load times on low-cost and flagship devices via ADB and Chrome remote debugging.",
+          "Presented the results as a research poster at the University of Houston.",
+        ],
+        skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
+      },
     ],
-    skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
   },
   {
-    role: "Software Engineer",
     company: "Stealth",
-    type: "Internship",
-    dates: "Jan 2026 – May 2026",
     location: "Remote",
+    dates: "Jan 2026 – May 2026",
     image: null,
     logo: "S",
     logoColor: "bg-gray-900",
-    description: [
-      "Contributed to an AR development team building applications for Meta Quest 3.",
-      "Supported Unity-based development workflows for immersive application features.",
-      "Collaborated in a remote engineering environment to help deliver AR-related functionality.",
+    roles: [
+      {
+        role: "Software Engineer",
+        type: "Internship",
+        dates: "Jan 2026 – May 2026",
+        description: [
+          "Contributed to an AR development team building applications for Meta Quest 3.",
+          "Supported Unity-based development workflows for immersive application features.",
+          "Collaborated in a remote engineering environment to help deliver AR-related functionality.",
+        ],
+        skills: ["Unity", "C#", "JavaScript", "AR Development", "Meta Quest 3"],
+      },
     ],
-    skills: ["Unity", "C#", "JavaScript", "AR Development", "Meta Quest 3"],
   },
 ];
 
@@ -314,9 +326,9 @@ const skills = {
 
 const heroHighlights = [
   {
-    label: "Next",
+    label: "Current",
     value: "Geometris LP",
-    detail: "Automation Engineer Intern · Fall 2026",
+    detail: "Automation Engineer Intern",
   },
   {
     label: "Research",
@@ -1911,7 +1923,7 @@ export default function App() {
                   className="hero-rise break-words text-sm font-semibold leading-snug text-red-700 sm:text-base mb-2"
                   style={{ "--rise-delay": "40ms" }}
                 >
-                  <span>Incoming Automation Engineer Intern</span>
+                  <span>Automation Engineer Intern</span>
                   <span className="hidden sm:inline"> · </span>
                   <span className="block sm:inline">
                     Computer Science Student
@@ -1937,11 +1949,11 @@ export default function App() {
                   style={{ "--rise-delay": "160ms" }}
                 >
                   Computer Science student at the University of Houston building
-                  full-stack, AI, and AR applications. Returning to Geometris LP
-                  this fall as an Automation Engineer Intern after a summer
-                  internship building full-stack internal automation tools.
-                  Previously researched offline search using embeddings and RAG
-                  for Internet-in-a-Box.
+                  full-stack, AI, and AR applications. Automation Engineer
+                  Intern at Geometris LP, building full-stack internal
+                  automation tools with React, Node.js, and MySQL. Previously
+                  researched offline search using embeddings and RAG for
+                  Internet-in-a-Box.
                 </p>
 
                 <div
@@ -2087,78 +2099,142 @@ export default function App() {
           />
 
           <div className="space-y-6">
-            {experiences.map((exp, index) => (
-              <Reveal
-                key={`${exp.company}-${exp.role}`}
-                delay={Math.min(index * 80, 240)}
-                className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
-              >
-                <div className="flex flex-col md:flex-row gap-5">
-                  <div className="flex-shrink-0">
-                    {exp.image ? (
-                      <img
-                        src={exp.image}
-                        alt={exp.company}
-                        loading="lazy"
-                        className="w-full md:w-40 h-48 md:h-28 object-cover rounded-lg border border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-full md:w-40 h-28 rounded-lg bg-gray-900 text-white flex items-center justify-center">
-                        <div
-                          className={`w-14 h-14 ${exp.logoColor} rounded-full flex items-center justify-center text-xl font-bold`}
-                        >
-                          {exp.logo}
+            {experiences.map((exp, index) => {
+              const multiRole = exp.roles.length > 1;
+              const primaryRole = exp.roles[0];
+
+              return (
+                <Reveal
+                  key={exp.company}
+                  delay={Math.min(index * 80, 240)}
+                  className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
+                >
+                  <div className="flex flex-col md:flex-row gap-5">
+                    <div className="flex-shrink-0">
+                      {exp.image ? (
+                        <img
+                          src={exp.image}
+                          alt={exp.company}
+                          loading="lazy"
+                          className="w-full md:w-40 h-48 md:h-28 object-cover rounded-lg border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-full md:w-40 h-28 rounded-lg bg-gray-900 text-white flex items-center justify-center">
+                          <div
+                            className={`w-14 h-14 ${exp.logoColor} rounded-full flex items-center justify-center text-xl font-bold`}
+                          >
+                            {exp.logo}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {exp.role}
-                        </h3>
-
-                        <p className="text-gray-900 font-semibold">
-                          {exp.company} · {exp.type}
-                        </p>
-
-                        <p className="text-gray-500 text-sm mt-1">
-                          {exp.location}
-                        </p>
-
-                        {exp.incoming && (
-                          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                            Incoming
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="text-sm bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1 rounded-full w-fit">
-                        {exp.dates}
-                      </span>
+                      )}
                     </div>
 
-                    <ul className="space-y-2 text-gray-700 text-sm mb-4">
-                      {exp.description.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="text-slate-400">•</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {multiRole ? exp.company : primaryRole.role}
+                          </h3>
 
-                    <div className="flex flex-wrap gap-2">
-                      {exp.skills.map((skill, skillIndex) => (
-                        <SkillTag key={skill} skill={skill} index={skillIndex} />
-                      ))}
+                          <p className="text-gray-900 font-semibold">
+                            {multiRole
+                              ? `${exp.roles.length} roles`
+                              : `${exp.company} · ${primaryRole.type}`}
+                          </p>
+
+                          <p className="text-gray-500 text-sm mt-1">
+                            {exp.location}
+                          </p>
+                        </div>
+
+                        <span className="text-sm bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1 rounded-full w-fit">
+                          {exp.dates}
+                        </span>
+                      </div>
+
+                      {multiRole ? (
+                        // LinkedIn-style thread: each role on a shared
+                        // timeline, newest first.
+                        <div>
+                          {exp.roles.map((role, roleIndex) => (
+                            <div
+                              key={role.role}
+                              className="relative pl-7 pb-6 last:pb-0"
+                            >
+                              {roleIndex < exp.roles.length - 1 && (
+                                <span
+                                  aria-hidden="true"
+                                  className="absolute left-[5px] top-5 bottom-0 w-0.5 rounded-full bg-gray-200"
+                                />
+                              )}
+
+                              <span
+                                aria-hidden="true"
+                                className="absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 border-gray-400 bg-white"
+                              />
+
+                              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                                <h4 className="font-bold text-gray-900">
+                                  {role.role}
+                                </h4>
+
+                                <span className="text-sm text-gray-500 whitespace-nowrap">
+                                  {role.dates}
+                                </span>
+                              </div>
+
+                              <p className="text-sm text-gray-500">
+                                {role.type}
+                              </p>
+
+                              <ul className="space-y-2 text-gray-700 text-sm mt-2 mb-3">
+                                {role.description.map((item) => (
+                                  <li key={item} className="flex gap-2">
+                                    <span className="text-slate-400">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+
+                              <div className="flex flex-wrap gap-2">
+                                {role.skills.map((skill, skillIndex) => (
+                                  <SkillTag
+                                    key={skill}
+                                    skill={skill}
+                                    index={skillIndex}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          <ul className="space-y-2 text-gray-700 text-sm mb-4">
+                            {primaryRole.description.map((item) => (
+                              <li key={item} className="flex gap-2">
+                                <span className="text-slate-400">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <div className="flex flex-wrap gap-2">
+                            {primaryRole.skills.map((skill, skillIndex) => (
+                              <SkillTag
+                                key={skill}
+                                skill={skill}
+                                index={skillIndex}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
