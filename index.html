@@ -15,6 +15,7 @@
     />
     <meta name="author" content="Amrinder Singh" />
     <meta name="theme-color" content="#dc2626" />
+    <link rel="canonical" href="https://amuo007.github.io/portfolio/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -24,9 +25,10 @@
       content="Computer Science student at the University of Houston building full-stack, AI, and AR applications."
     />
     <meta property="og:url" content="https://Amuo007.github.io/portfolio/" />
+    <!-- Served from the site itself so previews don't depend on raw.githubusercontent. -->
     <meta
       property="og:image"
-      content="https://raw.githubusercontent.com/Amuo007/portfolio/main/profile.jpeg"
+      content="https://amuo007.github.io/portfolio/profile.jpeg"
     />
 
     <!-- Twitter Card -->
@@ -38,15 +40,42 @@
     />
     <meta
       name="twitter:image"
-      content="https://raw.githubusercontent.com/Amuo007/portfolio/main/profile.jpeg"
+      content="https://amuo007.github.io/portfolio/profile.jpeg"
     />
 
+    <!-- Structured data so search engines can attach name, role, and
+         profiles to this page. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Amrinder Singh",
+        "url": "https://amuo007.github.io/portfolio/",
+        "image": "https://amuo007.github.io/portfolio/profile.jpeg",
+        "jobTitle": "Software Engineer Intern",
+        "worksFor": {
+          "@type": "Organization",
+          "name": "Geometris LP"
+        },
+        "alumniOf": {
+          "@type": "CollegeOrUniversity",
+          "name": "University of Houston"
+        },
+        "email": "mailto:Amrinderbalharjob@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Houston",
+          "addressRegion": "TX",
+          "addressCountry": "US"
+        },
+        "sameAs": [
+          "https://github.com/Amuo007",
+          "https://www.linkedin.com/in/amrinder-singh-uh-computer-science/"
+        ]
+      }
+    </script>
+
     <link rel="preconnect" href="https://api.github.com" crossorigin />
-    <link
-      rel="preconnect"
-      href="https://cdn-assets.theforage.com"
-      crossorigin
-    />
     <style>
       html {
         scroll-behavior: smooth;
@@ -76,12 +105,14 @@
 
       /* Keep anchored sections from hiding under the sticky header.
          The mobile header wraps to two rows, so it needs more clearance. */
-      section[id] {
+      section[id],
+      #main-content {
         scroll-margin-top: 8.5rem;
       }
 
       @media (min-width: 768px) {
-        section[id] {
+        section[id],
+        #main-content {
           scroll-margin-top: 5.5rem;
         }
       }
@@ -89,6 +120,26 @@
       :focus-visible {
         outline: 2px solid #b91c1c;
         outline-offset: 3px;
+      }
+
+      /* Hidden until focused, then drops in below the header for
+         keyboard users to jump past the nav. */
+      .skip-link {
+        position: fixed;
+        top: -100%;
+        left: 1rem;
+        z-index: 60;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: #111827;
+        color: #ffffff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: top 0.15s ease;
+      }
+
+      .skip-link:focus-visible {
+        top: 1rem;
       }
 
       /* ---- Motion ---- */
@@ -480,7 +531,7 @@
       })();
     </script>
     <!-- End Matomo Code -->
-    <script type="module" crossorigin src="/portfolio/assets/main-B5XlWVLP.js"></script>
+    <script type="module" crossorigin src="/portfolio/assets/main-CnfhUubL.js"></script>
     <link rel="modulepreload" crossorigin href="/portfolio/assets/client-Cd8XwpR4.js">
     <link rel="stylesheet" crossorigin href="/portfolio/assets/main-0drcEnGX.css">
   </head>
