@@ -7,6 +7,8 @@ import PortfolioGate, { VISITOR_NAME_KEY } from "./PortfolioGate";
 import profileImg from "../profile.jpeg";
 import internImg from "../intern.jpg";
 import posterImg from "../poster.jpg";
+import uhLogoImg from "./assets/uh-logo.png";
+import forageLogoImg from "./assets/forage-logo.png";
 
 const GITHUB_USERNAME = "Amuo007";
 const EXCLUDED_REPOS = [];
@@ -829,8 +831,10 @@ const UdemyLogo = () => (
 
 const ForageLogo = () => (
   <img
-    src="https://cdn-assets.theforage.com/favicon/favicon-96x96.png"
+    src={forageLogoImg}
     alt=""
+    width="96"
+    height="96"
     className="w-4 h-4 object-contain"
     loading="lazy"
   />
@@ -1781,6 +1785,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f7f7f8] text-gray-900">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+
       {!visitorName && <PortfolioGate onDone={setVisitorName} />}
       <header
         className={`bg-white/95 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-30 transition-shadow duration-200 ${
@@ -1828,13 +1836,16 @@ export default function App() {
         <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
       </header>
 
-      <main>
+      <main id="main-content">
         <section id="home" className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
           <div className="w-full max-w-full overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-10">
             <div className="flex min-w-0 flex-col md:flex-row md:items-center gap-8">
               <img
                 src={profileImg}
                 alt="Portrait of Amrinder Singh"
+                width="400"
+                height="400"
+                fetchPriority="high"
                 className="hero-rise mx-auto w-32 h-32 md:mx-0 md:w-36 md:h-36 rounded-full object-cover border-2 border-red-700 shadow-sm"
               />
 
@@ -2264,8 +2275,10 @@ export default function App() {
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden">
                   <img
-                    src="https://www.uh.edu/brand/_img/uh-interlock-logo.png"
+                    src={uhLogoImg}
                     alt="University of Houston interlocking UH logo"
+                    width="350"
+                    height="251"
                     className="h-14 w-14 scale-[1.9] object-contain"
                     loading="lazy"
                   />
