@@ -201,17 +201,17 @@ const experiences = [
     role: "Software Engineer Intern",
     company: "Geometris LP",
     type: "Full-time",
-    dates: "May 2026 – Present",
+    dates: "May 2026 – Aug 2026",
     location: "Houston, TX · On-site",
     image: internImg,
     logo: "G",
     logoColor: "bg-blue-600",
     description: [
-      "Working in a professional software engineering environment on real development tasks and internal engineering workflows.",
-      "Contributing to debugging, feature improvements, and application-related tasks.",
-      "Gaining hands-on experience collaborating with engineers and working with production-oriented systems.",
+      "Developed full-stack internal automation tools using React, Node.js, Express, and MySQL to streamline production planning, scheduling, and employee operations.",
+      "Built systems supporting 100+ production orders, automating previously manual workflows and improving operational visibility and production efficiency.",
+      "Designed REST APIs, database architecture, business logic, integrations, and automated workflows with a focus on reliability, scalability, and data accuracy.",
     ],
-    skills: ["Software Engineering", "JavaScript", "React", "Debugging"],
+    skills: ["React", "Node.js", "Express.js", "MySQL", "REST APIs"],
   },
   {
     role: "Undergraduate Student Researcher",
@@ -224,8 +224,8 @@ const experiences = [
     logoColor: "bg-red-600",
     description: [
       "Worked on Internet-in-a-Box and explored ways to improve search using embeddings and retrieval-augmented generation.",
-      "Evaluated how offline search and AI-assisted retrieval perform on low-end Android devices.",
-      "Explored practical educational search systems for environments with limited internet access.",
+      "Evaluated IIAB on Android as an offline digital library, measuring CPU, RAM, and page-load times on low-cost and flagship devices via ADB and Chrome remote debugging.",
+      "Presented the results as a research poster at the University of Houston.",
     ],
     skills: ["RAG", "Embeddings", "JavaScript", "Android", "IIAB"],
   },
@@ -258,7 +258,7 @@ const skills = {
     "WebSocket",
     "WebRTC",
   ],
-  Databases: ["PostgreSQL", "MongoDB", "SQLite", "Firebase", "Core Data"],
+  Databases: ["PostgreSQL", "MySQL", "MongoDB", "SQLite", "Firebase", "Core Data"],
   "Mobile / AR": [
     "iOS",
     "SwiftUI",
@@ -280,12 +280,15 @@ const skills = {
     "TensorFlow",
     "OpenAI API",
     "Anthropic Claude",
+    "Claude Code",
   ],
   Tools: [
     "Git",
     "GitHub",
     "Docker",
     "Microsoft Azure",
+    "Google Cloud Platform",
+    "Systems Design",
     "Xcode",
     "LaTeX",
     "Test-Driven Development",
@@ -295,9 +298,9 @@ const skills = {
 
 const heroHighlights = [
   {
-    label: "Current",
+    label: "Latest",
     value: "Geometris LP",
-    detail: "Software Engineer Intern",
+    detail: "Software Engineer Intern · Summer 2026",
   },
   {
     label: "Research",
@@ -308,6 +311,44 @@ const heroHighlights = [
     label: "Google PM",
     value: "4 / 7 modules",
     detail: "Professional Certificate in progress",
+  },
+];
+
+// Hand-picked work, kept in sync with the LinkedIn Projects section.
+// Each entry links to its repository; the live grid below still lists
+// every public repo.
+const featuredProjects = [
+  {
+    title: "SecureScan",
+    period: "Mar 2026 · HackMISSO",
+    repo: "SecureScan",
+    description:
+      "AI-powered cybersecurity risk analysis for GitHub repositories: scans a codebase for vulnerabilities, maps findings to the NIST Cybersecurity Framework, and generates actionable reports through a clean web UI.",
+    tags: ["AI Agents", "LLMs", "Node.js", "NIST"],
+  },
+  {
+    title: "Local LLM & RAG on Raspberry Pi",
+    period: "Aug – Dec 2025",
+    repo: "LocalLLM_RAG_pipelines",
+    description:
+      "Self-hosted assistant running on two Raspberry Pis: conversational chat, web-augmented question answering, PDF semantic retrieval, and real-time device monitoring on resource-constrained edge hardware.",
+    tags: ["RAG", "Ollama", "WebSocket", "Raspberry Pi"],
+  },
+  {
+    title: "Academic Form Management System",
+    period: "Jan – Apr 2025 · COSC 4353",
+    repo: "Waterloo",
+    description:
+      "Web-based academic form management for the University of Houston: Django backend with Microsoft Azure authentication, role-based access control, multi-department approval workflows, and LaTeX-powered PDF generation.",
+    tags: ["Django", "Azure AD", "Docker", "PostgreSQL"],
+  },
+  {
+    title: "MultiChainRestaurant",
+    period: "Aug – Dec 2024",
+    repo: "DB_RestaurantchainWebApp",
+    description:
+      "Multi-branch restaurant management system with real-time transaction tracking, backend menu management, and efficient database operations, built with Node.js and PostgreSQL.",
+    tags: ["Node.js", "Express.js", "PostgreSQL"],
   },
 ];
 
@@ -1880,9 +1921,10 @@ export default function App() {
                   style={{ "--rise-delay": "160ms" }}
                 >
                   Computer Science student at the University of Houston building
-                  full-stack, AI, and AR applications. Currently working as a
-                  Software Engineer Intern at Geometris LP. Previously researched
-                  offline search using embeddings and RAG for Internet-in-a-Box.
+                  full-stack, AI, and AR applications. Spent summer 2026 as a
+                  Software Engineer Intern at Geometris LP building full-stack
+                  internal automation tools. Previously researched offline
+                  search using embeddings and RAG for Internet-in-a-Box.
                 </p>
 
                 <div
@@ -2099,8 +2141,66 @@ export default function App() {
         <section id="projects" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <SectionHeading
             title="Projects"
-            subtitle="All public non-fork repositories, sorted by newest update."
+            subtitle="Selected work, plus every public repository live from GitHub."
           />
+
+          <Reveal className="mb-10">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Featured</h3>
+
+            <div className="grid md:grid-cols-2 gap-5">
+              {featuredProjects.map((project, index) => (
+                <a
+                  key={project.title}
+                  href={`https://github.com/${GITHUB_USERNAME}/${project.repo}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() =>
+                    trackEvent("Projects", "Open Featured", project.title)
+                  }
+                  style={{ "--stagger-delay": `${Math.min(index * 60, 300)}ms` }}
+                  className="stagger-item card-lift flex h-full flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="font-bold leading-snug text-gray-900">
+                      {project.title}
+                    </h4>
+
+                    <svg
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                      />
+                    </svg>
+                  </div>
+
+                  <p className="mt-1 text-xs text-gray-500">{project.period}</p>
+
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-700">
+                    {project.description}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {project.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </Reveal>
 
           <div className="mb-6 flex items-center justify-between gap-4">
             <p className="text-sm text-gray-500">
