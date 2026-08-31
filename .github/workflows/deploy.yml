@@ -4,8 +4,14 @@ on:
   push:
     branches:
       - main  # 👈 deploy whenever you push to main
+  repository_dispatch:
+    types:
+      - resume-updated  # 👈 fired by the Resume- repo when the resume changes
+  schedule:
+    - cron: "0 8 * * *" # daily safety rebuild so the resume is never stale
+  workflow_dispatch: {}
 permissions:
-  contents: write 
+  contents: write
 
 jobs:
   build:
@@ -22,6 +28,21 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Sync latest resume from Resume- repo
+        run: |
+          tmp=$(mktemp)
+          if curl -sfL \
+               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.raw" \
+               https://api.github.com/repos/Amuo007/Resume-/contents/resume.pdf \
+               -o "$tmp" \
+             && head -c 4 "$tmp" | grep -q "%PDF"; then
+            mv "$tmp" public/resume.pdf
+            echo "Resume synced from Resume- repo ($(wc -c < public/resume.pdf) bytes)"
+          else
+            echo "::warning::Could not fetch the latest resume; deploying with the copy committed in this repo."
+          fi
 
       - name: Build project
         run: npm run build
