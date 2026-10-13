@@ -146,10 +146,26 @@ const extractSummary = (md) => {
   return null;
 };
 
-const renderMarkdown = (md) => {
+// Markdown images: ![alt](url "optional title"). Handles absolute http(s)
+// URLs and repo-relative paths (resolved against raw.githubusercontent.com
+// so images embedded in a README still render inside the viewer).
+const MARKDOWN_IMAGE_REGEX = new RegExp(
+  "!\\[([^\\]]*)\\]\\(([^)\\s]+)(?:\\s+&quot;[^&]*&quot;)?\\)",
+  "g"
+);
+
+const renderMarkdown = (md, repoName) => {
   if (!md) {
     return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
   }
+
+  const resolveImageUrl = (url) => {
+    if (/^https?:\/\//i.test(url)) return url;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return null;
+    if (!repoName) return null;
+    const path = url.replace(/^\.?\//, "");
+    return `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${repoName}/HEAD/${path}`;
+  };
 
   const html = md
     .replace(/&/g, "&amp;")
@@ -173,6 +189,13 @@ const renderMarkdown = (md) => {
       /`([^`]+)`/g,
       '<code class="bg-gray-100 text-slate-800 px-1 rounded text-sm font-mono">$1</code>'
     )
+    .replace(MARKDOWN_IMAGE_REGEX, (match, alt, url) => {
+      // Same origin policy as links: only http(s) targets reach the DOM.
+      const src = resolveImageUrl(url);
+      return src
+        ? `<img src="${src}" alt="${alt}" loading="lazy" class="rounded-lg border border-gray-200 my-3 max-h-96 w-auto max-w-full object-contain" />`
+        : alt;
+    })
     .replace(MARKDOWN_LINK_REGEX, (match, text, url) =>
       // Only linkify http(s) targets so javascript: URLs and attribute
       // breakouts in README content can never reach the DOM as links.
@@ -1232,25 +1255,16 @@ const ProjectOverview = ({ repos, languages }) => {
   );
 };
 
-const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
-  const readme = details?.readme;
+const RepoCard = ({ repo, isLoading, details, onToggleReadme }) => {
   const description = repo.description || details?.summary;
   const summaryLoading = !repo.description && details === undefined;
-
-  // READMEs can be large; parse once per README instead of on every render.
-  const readmeHtml = useMemo(() => renderMarkdown(readme), [readme]);
 
   const handleRepositoryClick = () => {
     trackEvent("Projects", "Open Repository", repo.name);
   };
 
   const handleReadmeClick = () => {
-    trackEvent(
-      "Projects",
-      isExpanded ? "Hide README" : "View README",
-      repo.name
-    );
-
+    trackEvent("Projects", "View README", repo.name);
     onToggleReadme(repo.name);
   };
 
@@ -1337,22 +1351,101 @@ const RepoCard = ({ repo, isExpanded, isLoading, details, onToggleReadme }) => {
           onClick={handleReadmeClick}
           className="text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950 hover:decoration-slate-500"
         >
-          {isLoading
-            ? "Loading README..."
-            : isExpanded
-              ? "Hide README"
-              : "View README"}
+          {isLoading ? "Loading README..." : "View README"}
         </button>
       </div>
+    </div>
+  );
+};
 
-      {isExpanded && (
-        <div className="panel-in border-t border-gray-200 bg-gray-50 px-6 py-5">
-          <div
-            className="prose prose-sm max-w-none text-gray-700 max-h-96 overflow-y-auto"
-            dangerouslySetInnerHTML={{ __html: readmeHtml }}
-          />
+// README viewer popup. Reuses the site's existing gray palette and the
+// fade-in + settle animations so it feels part of the page, not a new UI.
+const ReadmeModal = ({ repo, isLoading, details, onClose }) => {
+  const readme = details?.readme;
+
+  // READMEs can be large; parse once per README instead of on every render.
+  const readmeHtml = useMemo(
+    () => renderMarkdown(readme, repo?.name),
+    [readme, repo?.name]
+  );
+
+  useEffect(() => {
+    if (!repo) return;
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [repo, onClose]);
+
+  if (!repo) return null;
+
+  return (
+    <div
+      className="fade-in fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/50 p-4 sm:p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${repo.name} README`}
+    >
+      <div
+        className="modal-in flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-4">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">{repo.name}</h3>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {repo.language ? `${repo.language} · ` : ""}README
+            </p>
+          </div>
+
+          <button
+            type="button"
+            autoFocus
+            onClick={onClose}
+            aria-label="Close README"
+            className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+          >
+            ✕
+          </button>
         </div>
-      )}
+
+        <div className="overflow-y-auto bg-gray-50 px-6 py-5">
+          {isLoading && !readme ? (
+            <div className="space-y-3">
+              <div className="h-6 w-1/2 bg-gray-100 rounded animate-pulse" />
+              <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+              <div className="h-4 w-5/6 bg-gray-100 rounded animate-pulse" />
+              <div className="h-40 w-full bg-gray-100 rounded-lg animate-pulse" />
+            </div>
+          ) : (
+            <div
+              className="prose prose-sm max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: readmeHtml }}
+            />
+          )}
+        </div>
+
+        <div className="flex justify-end border-t border-gray-200 px-6 py-3">
+          <a
+            href={repo.html_url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent("Projects", "Open Repository", repo.name)}
+            className="press text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800"
+          >
+            View on GitHub
+          </a>
+        </div>
+      </div>
     </div>
   );
 };
@@ -1835,6 +1928,14 @@ export default function App() {
     } else {
       fetchFullReadme(repoName);
     }
+  };
+
+  const closeReadme = () => {
+    if (expandedRepo) {
+      trackEvent("Projects", "Hide README", expandedRepo);
+    }
+
+    setExpandedRepo(null);
   };
 
   const languageCounts = {};
@@ -2427,7 +2528,6 @@ export default function App() {
                   >
                     <RepoCard
                       repo={repo}
-                      isExpanded={expandedRepo === repo.name}
                       isLoading={loadingReadme === repo.name}
                       details={repoDetails[repo.name]}
                       onToggleReadme={toggleReadme}
@@ -2746,6 +2846,13 @@ export default function App() {
       </main>
 
       <BackToTop />
+
+      <ReadmeModal
+        repo={repos.find((repo) => repo.name === expandedRepo)}
+        isLoading={loadingReadme === expandedRepo}
+        details={repoDetails[expandedRepo]}
+        onClose={closeReadme}
+      />
 
       <footer className="bg-white border-t border-gray-200 py-6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center text-sm text-gray-500">

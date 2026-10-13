@@ -297,20 +297,20 @@
         transform: scaleX(1);
       }
 
-      /* Smooth README expand */
-      @keyframes panel-in {
+      /* README modal settles in with the same soft easing as the gate card */
+      @keyframes modal-in {
         from {
           opacity: 0;
-          transform: translateY(-6px);
+          transform: translateY(12px) scale(0.97);
         }
         to {
           opacity: 1;
-          transform: translateY(0);
+          transform: none;
         }
       }
 
-      .panel-in {
-        animation: panel-in 0.22s var(--ease-out-soft) both;
+      .modal-in {
+        animation: modal-in 0.28s var(--ease-out-soft) both;
       }
 
       /* Language bar sweeps in from the left when revealed */
@@ -428,7 +428,7 @@
       @media print {
         .reveal,
         .hero-rise,
-        .panel-in,
+        .modal-in,
         .fade-in,
         .reveal .stagger-item,
         .contrib-wait .contrib-cell,
@@ -465,7 +465,7 @@
 
         .reveal,
         .hero-rise,
-        .panel-in,
+        .modal-in,
         .fade-in,
         .reveal .stagger-item,
         .contrib-wait .contrib-cell,
