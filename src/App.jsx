@@ -224,7 +224,7 @@ const renderMarkdown = (md, repoName) => {
     if (!resolved) return null;
     const style = sizeStyle(width, height);
 
-    return `<img src="${resolved}" alt="${alt}" loading="lazy"${style ? ` style="${style}"` : ""} class="rounded-lg border border-gray-200 my-3 max-h-96 w-auto max-w-full object-contain" />`;
+    return `<img src="${resolved}" alt="${alt}" loading="lazy"${style ? ` style="${style}"` : ""} class="inline-block rounded-lg border border-gray-200 my-3 max-h-96 w-auto max-w-full object-contain" />`;
   };
 
   const html = md
@@ -326,6 +326,11 @@ const renderMarkdown = (md, repoName) => {
       '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>'
     )
     .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
+    // GitHub collapses source newlines between adjacent tags (badge rows)
+    // and after explicit <br> tags; without this, each badge gets its own
+    // line and blocks gain stray blank lines.
+    .replace(/<br\/>([ \t]*\n)+/g, "<br/>")
+    .replace(/>([ \t]*\n)+[ \t]*(?=<|&lt;)/g, ">")
     .replace(/\n/g, "<br/>")
     // Raw-HTML blocks keep their source newlines; GitHub trims the ones
     // hugging the paragraph edges, so do the same to avoid stray gaps.
