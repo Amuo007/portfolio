@@ -154,6 +154,57 @@ const MARKDOWN_IMAGE_REGEX = new RegExp(
   "g"
 );
 
+// READMEs frequently mix Markdown with raw HTML (<p align="center">,
+// <img>, <b>, <br>, <table>, <a>). The viewer escapes everything first,
+// so these helpers re-enable exactly one safe, styled subset of those
+// tags. Anything outside the whitelist (script, iframe, unknown tags)
+// stays escaped and is shown as literal text, never parsed.
+const getHtmlAttr = (attrs, name) => {
+  const m = attrs.match(
+    new RegExp(
+      `(?:^|[\\s/])${name}\\s*=\\s*(?:&quot;([\\s\\S]*?)&quot;|'([^']*)')`,
+      "i"
+    )
+  );
+
+  if (!m) return "";
+  const value = m[1] !== undefined ? m[1] : m[2];
+  return value.replace(/&amp;/g, "&");
+};
+
+const alignClass = (align) =>
+  align === "center"
+    ? "text-center"
+    : align === "right"
+      ? "text-right"
+      : align === "left"
+        ? "text-left"
+        : "";
+
+const sizeStyle = (width, height) => {
+  // Bare numbers in HTML width/height are pixels; only px and % are kept.
+  const clean = (v) => {
+    if (/^\d+(\.\d+)?$/.test(v)) return `${v}px`;
+    return /^[\d.]+(px|%)$/.test(v) ? v : null;
+  };
+  const w = clean(width);
+  const h = clean(height);
+
+  if (!w && !h) return "";
+  return [w ? `width:${w}` : "", h ? `height:${h}` : "", "max-width:100%"]
+    .filter(Boolean)
+    .join(";");
+};
+
+const HEADING_CLASS = {
+  1: "text-xl",
+  2: "text-lg",
+  3: "text-base",
+  4: "text-sm",
+  5: "text-sm",
+  6: "text-sm",
+};
+
 const renderMarkdown = (md, repoName) => {
   if (!md) {
     return "<p class='text-gray-500 italic'>No README found for this repository.</p>";
@@ -167,11 +218,79 @@ const renderMarkdown = (md, repoName) => {
     return `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${repoName}/HEAD/${path}`;
   };
 
+  // Shared by Markdown and HTML images so both look identical.
+  const imgHtml = (src, alt, width, height) => {
+    const resolved = resolveImageUrl(src);
+    if (!resolved) return null;
+    const style = sizeStyle(width, height);
+
+    return `<img src="${resolved}" alt="${alt}" loading="lazy"${style ? ` style="${style}"` : ""} class="rounded-lg border border-gray-200 my-3 max-h-96 w-auto max-w-full object-contain" />`;
+  };
+
   const html = md
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
+    .replace(/&lt;img\b([\s\S]*?)\/?&gt;/gi, (match, attrs) => {
+      const tag = imgHtml(
+        getHtmlAttr(attrs, "src"),
+        getHtmlAttr(attrs, "alt"),
+        getHtmlAttr(attrs, "width"),
+        getHtmlAttr(attrs, "height")
+      );
+
+      return tag === null ? "" : tag;
+    })
+    .replace(
+      /&lt;p\b([\s\S]*?)&gt;/gi,
+      (match, attrs) =>
+        `<p class="text-gray-700 text-sm mb-2 ${alignClass(getHtmlAttr(attrs, "align"))}">`
+    )
+    .replace(/&lt;\/p&gt;/gi, "</p>")
+    .replace(
+      /&lt;h([1-6])\b([\s\S]*?)&gt;([\s\S]*?)&lt;\/h\1&gt;/gi,
+      (match, level, attrs, inner) =>
+        `<h${level} class="${HEADING_CLASS[level]} font-bold text-gray-900 mt-5 mb-2 ${alignClass(getHtmlAttr(attrs, "align"))}">${inner}</h${level}>`
+    )
+    .replace(/&lt;(b|strong)\b(?:[\s\S]*?)&gt;/gi, "<strong>")
+    .replace(/&lt;\/(b|strong)&gt;/gi, "</strong>")
+    .replace(/&lt;(i|em)\b(?:[\s\S]*?)&gt;/gi, "<em>")
+    .replace(/&lt;\/(i|em)&gt;/gi, "</em>")
+    .replace(/&lt;u\b(?:[\s\S]*?)&gt;/gi, "<u>")
+    .replace(/&lt;\/u&gt;/gi, "</u>")
+    .replace(/&lt;br\s*\/?&gt;/gi, "<br/>")
+    .replace(
+      /&lt;hr\s*\/?&gt;/gi,
+      '<hr class="border-gray-200 my-4" />'
+    )
+    .replace(
+      /&lt;a\b([\s\S]*?)&gt;([\s\S]*?)&lt;\/a&gt;/gi,
+      (match, attrs, inner) => {
+        const href = getHtmlAttr(attrs, "href");
+
+        return /^https?:\/\//i.test(href)
+          ? `<a href="${href}" target="_blank" rel="noreferrer" class="text-slate-700 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-950 hover:decoration-slate-500">${inner}</a>`
+          : inner;
+      }
+    )
+    .replace(/&lt;table\b([\s\S]*?)&gt;/gi, '<table class="my-3 w-full border-collapse text-sm">')
+    .replace(/&lt;\/table&gt;/gi, "</table>")
+    .replace(/&lt;tr\b([\s\S]*?)&gt;/gi, "<tr>")
+    .replace(/&lt;\/tr&gt;/gi, "</tr>")
+    .replace(/&lt;td\b([\s\S]*?)&gt;/gi, (match, attrs) => {
+      const align = alignClass(getHtmlAttr(attrs, "align"));
+      const style = sizeStyle(getHtmlAttr(attrs, "width"), "");
+
+      return `<td class="border border-gray-200 px-3 py-2 align-top text-gray-700 ${align}"${style ? ` style="${style}"` : ""}>`;
+    })
+    .replace(/&lt;\/td&gt;/gi, "</td>")
+    .replace(
+      /&lt;th\b([\s\S]*?)&gt;/gi,
+      (match, attrs) =>
+        `<th class="border border-gray-200 px-3 py-2 align-top text-left font-bold text-gray-900 bg-gray-100 ${alignClass(getHtmlAttr(attrs, "align"))}">`
+    )
+    .replace(/&lt;\/th&gt;/gi, "</th>")
     .replace(
       /^### (.+)$/gm,
       '<h3 class="text-base font-bold text-gray-800 mt-4 mb-1">$1</h3>'
@@ -184,6 +303,7 @@ const renderMarkdown = (md, repoName) => {
       /^# (.+)$/gm,
       '<h1 class="text-xl font-bold text-gray-900 mt-5 mb-2">$1</h1>'
     )
+    .replace(/^\s*(-{3,}|\*{3,})\s*$/gm, '<hr class="border-gray-200 my-4" />')
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(
       /`([^`]+)`/g,
@@ -191,10 +311,8 @@ const renderMarkdown = (md, repoName) => {
     )
     .replace(MARKDOWN_IMAGE_REGEX, (match, alt, url) => {
       // Same origin policy as links: only http(s) targets reach the DOM.
-      const src = resolveImageUrl(url);
-      return src
-        ? `<img src="${src}" alt="${alt}" loading="lazy" class="rounded-lg border border-gray-200 my-3 max-h-96 w-auto max-w-full object-contain" />`
-        : alt;
+      const tag = imgHtml(url, alt, "", "");
+      return tag === null ? alt : tag;
     })
     .replace(MARKDOWN_LINK_REGEX, (match, text, url) =>
       // Only linkify http(s) targets so javascript: URLs and attribute
@@ -208,7 +326,11 @@ const renderMarkdown = (md, repoName) => {
       '<li class="ml-4 list-disc text-gray-700 text-sm">$1</li>'
     )
     .replace(/\n\n/g, '</p><p class="text-gray-700 text-sm mb-2">')
-    .replace(/\n/g, "<br/>");
+    .replace(/\n/g, "<br/>")
+    // Raw-HTML blocks keep their source newlines; GitHub trims the ones
+    // hugging the paragraph edges, so do the same to avoid stray gaps.
+    .replace(/(<p[^>]*>)<br\/>/g, "$1")
+    .replace(/<br\/>(<\/p>)/g, "$1");
 
   return `<p class="text-gray-700 text-sm mb-2">${html}</p>`;
 };
