@@ -57,9 +57,20 @@ export async function ask(prompt) {
   if (!res.ok) throw new Error(`Lemonade error ${res.status}`);
   const data = await res.json();
   const text = (data.choices?.[0]?.message?.content || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-  state.messages = [...messages, { role: "assistant", content: text }];
-  state.cells = [...state.cells, { type: "md", source: `**Q:** ${prompt}` }, ...toCells(text).map((c) => ({ ...c, ai: true }))];
-  save(state);
+  const now = load(); // re-read: "&&" may have cleared the chat while this answer was generating
+  now.messages = [...now.messages, { role: "user", content: prompt }, { role: "assistant", content: text }];
+  now.cells = [...now.cells, { type: "md", source: `**Q:** ${prompt}` }, ...toCells(text).map((c) => ({ ...c, ai: true }))];
+  save(now);
+}
+
+// True once at least one answer has fully arrived (only then "HW2 try 2" is listed).
+export const hasTry2 = () => load().cells.length > 0;
+
+// "&&" in search: forget the whole chat; the notebook disappears until the next "&".
+export function clearTry2() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch { /* storage blocked */ }
 }
 
 // Same shape as the original notebooks: { t: "md" | "code", s: source, ai }

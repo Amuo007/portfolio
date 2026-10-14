@@ -3,14 +3,14 @@ import { Callout, Code, CopyButton, H2, PageHead } from "../components";
 import { href } from "../util";
 import { downloadNotebook } from "../snippets";
 import INDEX from "../data/notebooks/index.json";
-import { TRY2, loadTry2 } from "../ai";
+import { TRY2, hasTry2, loadTry2 } from "../ai";
 
 const loaders = import.meta.glob("../data/notebooks/*.json");
 const load = (id) => (id === TRY2.id ? loadTry2() : loaders[`../data/notebooks/${id}.json`]().then((m) => m.default));
 
 // "HW2 try 2" (the "&" chat) sits right after HW02 Part B.
 const at = INDEX.findIndex((n) => n.id === "hw02b") + 1;
-const LIST = [...INDEX.slice(0, at), TRY2, ...INDEX.slice(at)];
+const allNotebooks = () => (hasTry2() ? [...INDEX.slice(0, at), TRY2, ...INDEX.slice(at)] : INDEX);
 const cellCount = (n) => (n.id === TRY2.id ? "AI chat" : `${n.n} cells`);
 
 const TOPIC_PAGE = { image: "images", llm: "llm", transfer: "transfer", cnn: "cnn", keras: "keras", binary: "binary" };
@@ -53,7 +53,7 @@ function Markdown({ text }) {
 }
 
 export function OriginalLinks({ topic }) {
-  const list = LIST.filter((n) => n.topic === topic);
+  const list = allNotebooks().filter((n) => n.topic === topic);
   if (!list.length) return null;
   return (
     <>
@@ -73,7 +73,7 @@ export function OriginalLinks({ topic }) {
 }
 
 function Viewer({ id }) {
-  const meta = LIST.find((n) => n.id === id);
+  const meta = allNotebooks().find((n) => n.id === id);
   const [nb, setNb] = useState(null);
   const [error, setError] = useState("");
   const known = Boolean(meta);
@@ -132,6 +132,12 @@ function Viewer({ id }) {
 }
 
 export default function Notebooks({ sub }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {   // re-check the list when "HW2 try 2" appears or is cleared
+    const update = () => setTick((t) => t + 1);
+    window.addEventListener("try2-updated", update);
+    return () => window.removeEventListener("try2-updated", update);
+  }, []);
   if (sub) return <Viewer id={sub} />;
   return (
     <>
@@ -143,7 +149,7 @@ export default function Notebooks({ sub }) {
         Each notebook can be downloaded as a clean <code>.ipynb</code> (no outputs) and run again.
       </Callout>
       <div className="nb-list">
-        {LIST.map((n) => (
+        {allNotebooks().map((n) => (
           <a key={n.id} className="nb-row" href={href("notebooks", n.id)}>
             <span className="nb-title">{n.title}</span>
             <span className="nb-desc">{n.desc}</span>

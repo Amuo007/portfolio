@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PAGES } from "./pageMeta";
 import { PageCtx, href } from "./util";
 import { search } from "./search";
-import { ask } from "./ai";
+import { ask, clearTry2 } from "./ai";
 import Home from "./pages/Home";
 import Setup from "./pages/Setup";
 import Transfer from "./pages/Transfer";
@@ -53,8 +53,9 @@ function SearchDialog({ onClose }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [status, setStatus] = useState("");
-  const aiQ = q.trim().endsWith("&") ? q.trim().slice(0, -1).trim() : null;   // "question &" -> Lemonade
-  const results = aiQ === null ? search(q) : [];
+  const clearQ = q.trim().endsWith("&&");                                            // "&&" -> clear the chat
+  const aiQ = !clearQ && q.trim().endsWith("&") ? q.trim().slice(0, -1).trim() : null;   // "question &" -> Lemonade
+  const results = aiQ === null && !clearQ ? search(q) : [];
   const go = (r) => {
     location.hash = href(r.to[0], r.to[1]);
     onClose();
@@ -71,8 +72,15 @@ function SearchDialog({ onClose }) {
       setStatus(error.message);
     }
   };
+  const clearSession = () => {
+    clearTry2();
+    if (location.hash.includes("hw2-try-2")) location.hash = href("notebooks");
+    window.dispatchEvent(new Event("try2-updated"));
+    onClose();
+  };
   const onKey = (e) => {
-    if (e.key === "Enter" && aiQ !== null) { e.preventDefault(); sendToAi(); }
+    if (e.key === "Enter" && clearQ) { e.preventDefault(); clearSession(); }
+    else if (e.key === "Enter" && aiQ !== null) { e.preventDefault(); sendToAi(); }
     else if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
     else if (e.key === "Enter" && results[active]) go(results[active]);
@@ -97,7 +105,14 @@ function SearchDialog({ onClose }) {
               <span className="search-sub">{status && status !== "busy" ? status : "Enter = ask · same chat every time · answer becomes cells in HW2 try 2"}</span>
             </button>
           )}
-          {q && aiQ === null && !results.length && <div className="search-empty">No results for "{q}"</div>}
+          {clearQ && (
+            <button type="button" className="search-item is-active" onClick={clearSession}>
+              <span className="search-type">Clear</span>
+              <span className="search-title">Delete the HW2 try 2 session</span>
+              <span className="search-sub">Enter = clear the whole chat · the next "&amp;" starts a new one</span>
+            </button>
+          )}
+          {q && aiQ === null && !clearQ && !results.length && <div className="search-empty">No results for "{q}"</div>}
           {!q && (
             <div className="search-empty">
               Type a task ("roc curve"), a function ("train_model"), a setting ("EPOCHS") or a word ("dropout").
