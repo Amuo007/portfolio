@@ -3,9 +3,15 @@ import { Callout, Code, CopyButton, H2, PageHead } from "../components";
 import { href } from "../util";
 import { downloadNotebook } from "../snippets";
 import INDEX from "../data/notebooks/index.json";
+import { TRY2, loadTry2 } from "../ai";
 
 const loaders = import.meta.glob("../data/notebooks/*.json");
-const load = (id) => loaders[`../data/notebooks/${id}.json`]().then((m) => m.default);
+const load = (id) => (id === TRY2.id ? loadTry2() : loaders[`../data/notebooks/${id}.json`]().then((m) => m.default));
+
+// "HW2 try 2" (the "&" chat) sits right after HW02 Part B.
+const at = INDEX.findIndex((n) => n.id === "hw02b") + 1;
+const LIST = [...INDEX.slice(0, at), TRY2, ...INDEX.slice(at)];
+const cellCount = (n) => (n.id === TRY2.id ? "AI chat" : `${n.n} cells`);
 
 const TOPIC_PAGE = { image: "images", llm: "llm", transfer: "transfer", cnn: "cnn", keras: "keras", binary: "binary" };
 
@@ -47,7 +53,7 @@ function Markdown({ text }) {
 }
 
 export function OriginalLinks({ topic }) {
-  const list = INDEX.filter((n) => n.topic === topic);
+  const list = LIST.filter((n) => n.topic === topic);
   if (!list.length) return null;
   return (
     <>
@@ -58,7 +64,7 @@ export function OriginalLinks({ topic }) {
           <a key={n.id} className="card" href={href("notebooks", n.id)}>
             <div className="card-title">{n.title}</div>
             <div className="card-why">{n.desc}</div>
-            <div className="card-hw">{n.n} cells · {n.file}</div>
+            <div className="card-hw">{cellCount(n)} · {n.file}</div>
           </a>
         ))}
       </div>
@@ -67,18 +73,26 @@ export function OriginalLinks({ topic }) {
 }
 
 function Viewer({ id }) {
-  const meta = INDEX.find((n) => n.id === id);
+  const meta = LIST.find((n) => n.id === id);
   const [nb, setNb] = useState(null);
+  const [error, setError] = useState("");
   const known = Boolean(meta);
   useEffect(() => {
+    const refresh = () => {
+      setError("");
+      load(id).then(setNb).catch((e) => setError(e.message));
+    };
     setNb(null);
-    if (known) load(id).then(setNb);
+    if (!known) return;
+    refresh();
+    window.addEventListener("try2-updated", refresh);   // a new & answer arrived
+    return () => window.removeEventListener("try2-updated", refresh);
   }, [id, known]);
   if (!meta) return <p>Notebook not found. <a href={href("notebooks")}>All notebooks</a></p>;
   const codeCells = nb ? nb.cells.filter((c) => c.t === "code") : [];
   const allCode = () => codeCells.map((c) => c.s).join("\n\n");
   const download = () =>
-    downloadNotebook(meta.file.replace(/\s+/g, "_"), nb.cells.map((c) => ({ type: c.t === "md" ? "md" : "code", text: c.s })));
+    downloadNotebook(id === TRY2.id ? "HW2_try_2.ipynb" : meta.file.replace(/\s+/g, "_"), nb.cells.map((c) => ({ type: c.t === "md" ? "md" : "code", text: c.s })));
   let n = 0;
   return (
     <>
@@ -86,20 +100,24 @@ function Viewer({ id }) {
         {meta.desc}
       </PageHead>
       <div className="nb-bar">
-        <span className="muted">{meta.file} · {meta.n} cells{TOPIC_PAGE[meta.topic] && <> · cleaned-up version on the <a href={href(TOPIC_PAGE[meta.topic])}>topic page</a></>}</span>
+        <span className="muted">{meta.file} · {nb ? nb.cells.length : meta.n} cells{TOPIC_PAGE[meta.topic] && <> · cleaned-up version on the <a href={href(TOPIC_PAGE[meta.topic])}>topic page</a></>}</span>
         <span className="nb-actions">
           {nb && <CopyButton text={allCode} label={`Copy all ${codeCells.length} code cells`} className="btn-primary" />}
           {nb && <button type="button" className="btn" onClick={download}>Download .ipynb</button>}
         </span>
       </div>
-      {!nb && <p className="muted">Loading…</p>}
+      {!nb && <p className="muted">{error || "Loading…"}</p>}
+      {nb && !nb.cells.length && <p className="muted">Empty so far: open search, type a question ending in &amp;, press Enter.</p>}
       {nb &&
         nb.cells.map((c, i) =>
           c.t === "md" ? (
-            <Markdown key={i} text={c.s} />
+            <div key={i} className={c.ai ? "is-ai" : undefined}>
+              {c.ai && <span className="ai-tag">AI</span>}
+              <Markdown text={c.s} />
+            </div>
           ) : (
             <div className="nb-cell" key={i}>
-              <Code code={c.s} title={`In [${++n}]`} maxLines={40} />
+              <Code code={c.s} title={`In [${++n}]${c.ai ? " · AI" : ""}`} maxLines={40} />
               {(c.o || c.fig) && (
                 <div className="nb-out">
                   {c.o && <pre>{c.o}</pre>}
@@ -125,11 +143,11 @@ export default function Notebooks({ sub }) {
         Each notebook can be downloaded as a clean <code>.ipynb</code> (no outputs) and run again.
       </Callout>
       <div className="nb-list">
-        {INDEX.map((n) => (
+        {LIST.map((n) => (
           <a key={n.id} className="nb-row" href={href("notebooks", n.id)}>
             <span className="nb-title">{n.title}</span>
             <span className="nb-desc">{n.desc}</span>
-            <span className="nb-n">{n.n} cells</span>
+            <span className="nb-n">{cellCount(n)}</span>
           </a>
         ))}
       </div>

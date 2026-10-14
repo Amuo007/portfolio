@@ -312,3 +312,5 @@ td code { white-space: normal; }
 .search-foot { display: flex; gap: 16px; padding: 8px 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
 
 .foot { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-3); }
+.ai-tag { display: inline-block; margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--exam); background: var(--exam-bg); border-radius: 999px; padding: 2px 8px; }
+.is-ai .md { margin-top: 6px; }

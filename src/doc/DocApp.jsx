@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PAGES } from "./pageMeta";
 import { PageCtx, href } from "./util";
 import { search } from "./search";
+import { ask } from "./ai";
 import Home from "./pages/Home";
 import Setup from "./pages/Setup";
 import Transfer from "./pages/Transfer";
@@ -43,25 +44,36 @@ function useTheme() {
   return [theme, toggle];
 }
 
+// Mounted fresh on every open, so it always starts empty and focused (no lost keystrokes).
 function Search({ open, onClose }) {
+  return open ? <SearchDialog onClose={onClose} /> : null;
+}
+
+function SearchDialog({ onClose }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
-  const input = useRef(null);
-  const results = search(q);
-  useEffect(() => {
-    if (open) {
-      setQ("");
-      setActive(0);
-      setTimeout(() => input.current?.focus(), 0);
-    }
-  }, [open]);
-  if (!open) return null;
+  const [status, setStatus] = useState("");
+  const aiQ = q.trim().endsWith("&") ? q.trim().slice(0, -1).trim() : null;   // "question &" -> Lemonade
+  const results = aiQ === null ? search(q) : [];
   const go = (r) => {
     location.hash = href(r.to[0], r.to[1]);
     onClose();
   };
+  const sendToAi = async () => {
+    if (!aiQ || status === "busy") return;
+    setStatus("busy");
+    try {
+      await ask(aiQ);
+      location.hash = href("notebooks", "hw2-try-2");
+      window.dispatchEvent(new Event("try2-updated"));
+      onClose();
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
   const onKey = (e) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
+    if (e.key === "Enter" && aiQ !== null) { e.preventDefault(); sendToAi(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
     else if (e.key === "Enter" && results[active]) go(results[active]);
     else if (e.key === "Escape") onClose();
@@ -70,7 +82,7 @@ function Search({ open, onClose }) {
     <div className="search-backdrop" onMouseDown={onClose}>
       <div className="search" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="Search">
         <input
-          ref={input}
+          autoFocus
           value={q}
           onChange={(e) => { setQ(e.target.value); setActive(0); }}
           onKeyDown={onKey}
@@ -78,7 +90,14 @@ function Search({ open, onClose }) {
           aria-label="Search"
         />
         <div className="search-results">
-          {q && !results.length && <div className="search-empty">No results for "{q}"</div>}
+          {aiQ !== null && (
+            <button type="button" className="search-item is-active" onClick={sendToAi} disabled={status === "busy"}>
+              <span className="search-type">Ask AI</span>
+              <span className="search-title">{status === "busy" ? "Thinking… (answer goes to HW2 try 2)" : aiQ || "Type a question before the &"}</span>
+              <span className="search-sub">{status && status !== "busy" ? status : "Enter = ask · same chat every time · answer becomes cells in HW2 try 2"}</span>
+            </button>
+          )}
+          {q && aiQ === null && !results.length && <div className="search-empty">No results for "{q}"</div>}
           {!q && (
             <div className="search-empty">
               Type a task ("roc curve"), a function ("train_model"), a setting ("EPOCHS") or a word ("dropout").
