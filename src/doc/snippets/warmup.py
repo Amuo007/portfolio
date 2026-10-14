@@ -1,4 +1,4 @@
-# Run ONCE before the exam (internet needed, 5-15 min). Everything is saved on your disk,
+# Run ONCE before the exam (internet needed; CIFAR10 alone can take 30+ min). Everything is saved on disk,
 # so during the exam nothing big has to download. Safe to re-run: finished items are skipped.
 import os
 

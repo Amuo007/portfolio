@@ -28,7 +28,7 @@ export default function Setup() {
       <ol className="steps">
         <li><b>Create the environment</b> (below, ~5 min). Python 3.12 works with every package. This exact list was installed and tested.</li>
         <li><b>Run the check cell.</b> Every line should say OK and the Device should be <code>mps</code>.</li>
-        <li><b>Run the warm-up cell</b> once (5–15 min). It downloads MNIST, Fashion-MNIST, CIFAR-10, horses vs camels and the pretrained weights.</li>
+        <li><b>Run the warm-up cell</b> once, the day before (CIFAR-10 alone can take 30+ minutes). It downloads MNIST, Fashion-MNIST, CIFAR-10, horses vs camels and the pretrained weights.</li>
         <li><b>Start Ollama</b> only if you want the LLM page to work (<code>ollama pull mistral</code>, <code>ollama pull llava</code>).</li>
         <li><b>Bookmark this site.</b></li>
       </ol>
@@ -52,7 +52,7 @@ export default function Setup() {
       <BlockSection id="warmup">
         <p>
           Pre-downloads everything into <code>~/datasets</code>, <code>~/.cache/torch</code> and <code>~/.keras</code>.
-          CIFAR-10 comes from a very slow university server (about 10 minutes in testing), so do this before the exam.
+          CIFAR-10 comes from a very slow university server (over 30 minutes for half the file in testing), so do this before the exam.
         </p>
         <Block id="warmup" />
       </BlockSection>

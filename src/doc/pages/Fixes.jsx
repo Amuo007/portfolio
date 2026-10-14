@@ -57,7 +57,7 @@ export default function Fixes() {
           [<C>Couldn't find any class folder in ...</C>, <>ImageFolder needs <C>folder/class_name/image.jpg</C>. Point it one level deeper (use <C>find_dir</C>)</>],
           [<C>AssertionError: train/test class folders differ</C>, "Train and test have different class folder names; fix or merge."],
           ["Kaggle asks to log in", <>Public data: use kagglehub or <C>kaggle datasets download owner/name</C>. Private: <C>kaggle auth login</C></>],
-          ["CIFAR-10 download takes forever", "Its server is slow (~10 min). Run the warm-up cell before the exam, or use MNIST / FashionMNIST."],
+          ["CIFAR-10 download takes forever", "Its server is very slow (30+ min in testing). Run the warm-up cell before the exam, or use MNIST / FashionMNIST."],
           ["Image looks blue", <>OpenCV is BGR: <C>cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</C></>],
           [<C>cv2.imread returned None</C>, "Wrong file name/path (OpenCV doesn't raise an error itself)."],
           ["albumentations: unexpected keyword argument", <>Version 2 renamed things: <C>RandomResizedCrop(size=(224, 224))</C>, <C>GaussNoise(std_range=...)</C>, <C>Affine</C> instead of ShiftScaleRotate</>],
