@@ -1,4 +1,4 @@
-import{r as tt,j as Z,R as Pc,a as Lc}from"./client-Cd8XwpR4.js";/**
+import{r as tt,j as Z,R as Pc,a as Lc}from"./client-CrwQxxwm.js";/**
  * @license
  * Copyright 2010-2026 Three.js Authors
  * SPDX-License-Identifier: MIT
