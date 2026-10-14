@@ -9,13 +9,14 @@ export default defineConfig({
   base: '/portfolio/',
   build: {
     rollupOptions: {
-      // Multi-page build: /instagram/ is an unlisted page that only
-      // people with the direct link (Instagram bio) ever see.
+      // Multi-page build: /instagram/ and /doc/ are unlisted pages that only
+      // people with the direct link ever see.
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         instagram: fileURLToPath(
           new URL('./instagram/index.html', import.meta.url)
         ),
+        doc: fileURLToPath(new URL('./doc/index.html', import.meta.url)),
       },
     },
   },

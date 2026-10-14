@@ -1,0 +1,106 @@
+[
+ {
+  "id": "hw01a",
+  "title": "HW01 Part A",
+  "desc": "OpenCV image basics: load, size, channels, histograms, grayscale",
+  "file": "HW01_PartA_Amrinder_Singh.ipynb",
+  "topic": "image",
+  "n": 16
+ },
+ {
+  "id": "hw01b",
+  "title": "HW01 Part B",
+  "desc": "Binary threshold, its histogram, commentary answers",
+  "file": "HW01_PartB_Amrinder_Singh.ipynb",
+  "topic": "image",
+  "n": 10
+ },
+ {
+  "id": "hw02a",
+  "title": "HW02 Part A",
+  "desc": "Show an image (environment check)",
+  "file": "HW2-A.ipynb",
+  "topic": "image",
+  "n": 4
+ },
+ {
+  "id": "hw02b",
+  "title": "HW02 Part B",
+  "desc": "LangChain + Ollama: ask Mistral the time, fix it with a tool",
+  "file": "HW-2B.ipynb",
+  "topic": "llm",
+  "n": 10
+ },
+ {
+  "id": "hw03a",
+  "title": "HW03 Part A",
+  "desc": "Horses vs camels input pipeline (PyTorch)",
+  "file": "HW03-Report-PartA-Amrinder-Singh.ipynb",
+  "topic": "transfer",
+  "n": 13
+ },
+ {
+  "id": "hw03b",
+  "title": "HW03 Part B",
+  "desc": "ResNet50 transfer learning: two freezing configurations compared",
+  "file": "Report-PartB-Amrinder-Singh.ipynb",
+  "topic": "transfer",
+  "n": 71
+ },
+ {
+  "id": "hw04a",
+  "title": "HW04 Part A",
+  "desc": "MNIST: base CNN from scratch (PyTorch)",
+  "file": "HW04-ICA – Part A.ipynb",
+  "topic": "cnn",
+  "n": 14
+ },
+ {
+  "id": "hw04b",
+  "title": "HW04 Part B",
+  "desc": "MNIST: train 10 epochs, confusion matrix, deeper CNN",
+  "file": "HW04-ICA – Part B.ipynb",
+  "topic": "cnn",
+  "n": 15
+ },
+ {
+  "id": "hw05b",
+  "title": "HW05 Part B",
+  "desc": "VGG16: visualize what filters learn (Keras)",
+  "file": "HW05-PartB-Report-Singh.ipynb",
+  "topic": "keras",
+  "n": 33
+ },
+ {
+  "id": "hw06a",
+  "title": "HW06 Part A",
+  "desc": "Keras ResNet50 base model",
+  "file": "HW-6PART-A.ipynb",
+  "topic": "keras",
+  "n": 4
+ },
+ {
+  "id": "hw06b",
+  "title": "HW06 Part B",
+  "desc": "BCE vs CCE, frozen vs full fine-tuning, binary metrics",
+  "file": "HW06_PartB.ipynb",
+  "topic": "binary",
+  "n": 39
+ },
+ {
+  "id": "harness",
+  "title": "HW Harness",
+  "desc": "Intent router with Mistral + LLaVA, classifier accuracy",
+  "file": "HW-Harness.ipynb",
+  "topic": "llm",
+  "n": 33
+ },
+ {
+  "id": "hw07",
+  "title": "HW07",
+  "desc": "Chatbot: memory (FAISS), web search, camera, LLaVA",
+  "file": "HW7.ipynb",
+  "topic": "llm",
+  "n": 45
+ }
+]
