@@ -487,8 +487,8 @@ const heroHighlights = [
   },
   {
     label: "Google PM",
-    value: "4 / 7 modules",
-    detail: "Professional Certificate in progress",
+    value: "Certified",
+    detail: "Professional Certificate · Oct 2026",
   },
 ];
 
@@ -534,14 +534,9 @@ const certifications = [
   {
     title: "Google Project Management: Professional Certificate",
     issuer: "Google · Coursera",
-    inProgress: true,
+    issued: "Oct 2026",
+    url: "https://www.credly.com/badges/fa3c978a-8651-4a88-a30c-976864192ee4/public_url",
     logo: "google",
-    progress: {
-      completed: 4,
-      total: 7,
-      label: "4 of 7 modules complete",
-      note: "Module 4 is complete; modules 5, 6, and 7 are left.",
-    },
   },
   {
     title: "UR2PhD Undergraduate Research Training Course Participant",
