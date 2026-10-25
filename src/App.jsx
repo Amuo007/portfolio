@@ -535,6 +535,7 @@ const certifications = [
     title: "Claude Code 101",
     issuer: "Anthropic",
     issued: "Oct 2026",
+    url: "https://verify.skilljar.com/c/xhyb4rdpph6q",
     logo: "anthropic",
   },
   {
