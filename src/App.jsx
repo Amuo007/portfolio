@@ -532,6 +532,12 @@ const featuredProjects = [
 
 const certifications = [
   {
+    title: "Claude Code 101",
+    issuer: "Anthropic",
+    issued: "Oct 2026",
+    logo: "anthropic",
+  },
+  {
     title: "Google Project Management: Professional Certificate",
     issuer: "Google · Coursera",
     issued: "Oct 2026",
@@ -1065,6 +1071,18 @@ const CraLogo = () => (
   </svg>
 );
 
+// Official Anthropic "A" mark.
+const AnthropicLogo = () => (
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill="#191919"
+    aria-hidden="true"
+  >
+    <path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" />
+  </svg>
+);
+
 const CertificationLogo = ({ provider }) => (
   <span
     className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white shadow-sm"
@@ -1074,6 +1092,7 @@ const CertificationLogo = ({ provider }) => (
     {provider === "udemy" && <UdemyLogo />}
     {provider === "forage" && <ForageLogo />}
     {provider === "cra" && <CraLogo />}
+    {provider === "anthropic" && <AnthropicLogo />}
   </span>
 );
 
